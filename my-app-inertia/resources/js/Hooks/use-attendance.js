@@ -3,34 +3,40 @@ import useSWR from "swr";
 import { fetcher } from "@/Utils/api";
 import "@/bootstrap";
 
-// Hapus definisi Audio di sini
-// const scanSound = new Audio("/sounds/scan-beep.mp3");
-// scanSound.load();
-
 export const useAttendance = () => {
     const {
         data: initialRecords,
         error: swrError,
         mutate,
+        isLoading: recordsLoading,
     } = useSWR("/api/attendance/today", fetcher, {
+        revalidateOnFocus: true,
+        revalidateOnReconnect: true,
+    });
+
+    const {
+        data: activeStatusData,
+        error: statusError,
+        isLoading: statusLoading,
+    } = useSWR("/api/pertemuan-active-status", fetcher, {
         revalidateOnFocus: true,
         revalidateOnReconnect: true,
     });
 
     const [status, setStatus] = useState({
         type: "waiting",
-        title: "Scan Kartu Pelajar Anda...",
+        title: "Menunggu Kartu...",
         detail: null,
     });
 
     const statusTimerRef = useRef(null);
-
     const [isAudioReady, setIsAudioReady] = useState(() => {
         return localStorage.getItem("audioActivated") === "true";
     });
 
     const attendanceRecords = initialRecords || [];
     const attendanceCount = attendanceRecords.length;
+    const isSessionActive = !!activeStatusData?.is_active && !statusLoading;
 
     const resetStatus = () => {
         clearTimeout(statusTimerRef.current);
@@ -44,23 +50,20 @@ export const useAttendance = () => {
     };
 
     const initAudio = () => {
-        // Coba buat dan putar instance audio dummy singkat saat klik
         try {
-            const tempAudio = new Audio("/sounds/scan-beep.mp3"); // Arahkan ke file yang valid
+            const tempAudio = new Audio("/sounds/scan-beep.mp3");
             const playPromise = tempAudio.play();
-
             if (playPromise !== undefined) {
                 playPromise
                     .then(() => {
                         setTimeout(() => {
                             tempAudio.pause();
                             tempAudio.currentTime = 0;
-                        }, 50); // Jeda setelah 50ms
+                        }, 50);
                         setIsAudioReady(true);
                         localStorage.setItem("audioActivated", "true");
                     })
                     .catch(() => {
-                        // Fallback jika tetap diblokir
                         setIsAudioReady(true);
                         localStorage.setItem("audioActivated", "true");
                     });
@@ -70,7 +73,6 @@ export const useAttendance = () => {
             }
         } catch (e) {
             console.error("Gagal init audio:", e);
-            // Fallback terakhir
             setIsAudioReady(true);
             localStorage.setItem("audioActivated", "true");
         }
@@ -79,7 +81,6 @@ export const useAttendance = () => {
     useEffect(() => {
         const handleScan = (e) => {
             if (isAudioReady) {
-                // Buat instance Audio baru SETIAP KALI event masuk
                 const soundToPlay = new Audio("/sounds/scan-beep.mp3");
                 soundToPlay
                     .play()
@@ -88,12 +89,7 @@ export const useAttendance = () => {
                     );
             }
 
-            setStatus({
-                type: e.type,
-                title: e.title,
-                detail: e.detail,
-            });
-
+            setStatus({ type: e.type, title: e.title, detail: e.detail });
             resetStatus();
 
             if (e.type === "success") {
@@ -112,14 +108,15 @@ export const useAttendance = () => {
             );
             clearTimeout(statusTimerRef.current);
         };
-    }, [mutate, isAudioReady]); 
+    }, [mutate, isAudioReady]);
 
     return {
         status,
         attendanceRecords,
         attendanceCount,
-        isLoading: !swrError && !initialRecords,
-        error: swrError,
+        isSessionActive,
+        isLoading: recordsLoading || statusLoading,
+        error: swrError || statusError,
         isAudioReady,
         initAudio,
     };

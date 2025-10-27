@@ -1,8 +1,12 @@
 import { CreditCard, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 
-function StatusCard({ status }) {
+function StatusCard({ status, sessionActive }) {
+    const isWaitingWithNoSession = status.type === "waiting" && !sessionActive;
+
     const getStatusStyles = () => {
-        switch (status.type) {
+        const displayType = isWaitingWithNoSession ? "error" : status.type;
+
+        switch (displayType) {
             case "success":
                 return {
                     container:
@@ -64,12 +68,23 @@ function StatusCard({ status }) {
 
     const styles = getStatusStyles();
 
+    let displayMessage = status.message;
+    if (isWaitingWithNoSession) {
+        displayMessage = (
+            <>
+                Tidak Ada Sesi Aktif
+                <br />
+                <p>Mulai sesi absensi dari halaman admin untuk scan.</p>
+            </>
+        );
+    }
+
     return (
         <div
             className={`bg-white rounded-lg p-3 border md:py-9 ${styles.container} transition-all duration-300 ease-in-out`}
         >
             <div className="text-center">
-                {status.type === "waiting" && (
+                {status.type === "waiting" && sessionActive && (
                     <h2 className="text-lg md:text-xl text-gray-800 mb-4 font-medium">
                         Tempelkan Kartu Pelajar Anda
                     </h2>
@@ -84,15 +99,16 @@ function StatusCard({ status }) {
 
                     <div className={styles.text}>
                         <p className="text-md md:text-lg font-medium text-center">
-                            {status.message}
+                            {displayMessage}
                         </p>
                     </div>
                 </div>
 
                 <div className={`mt-8 pt-8 border-t ${styles.border}`}>
-                    <p className={`text-sm md:text-md  ${styles.text}`}>
-                        Tempelkan kartu Anda untuk mencatat
-                        kehadiran
+                    <p className={`text-sm md:text-md ${styles.text}`}>
+                        {isWaitingWithNoSession
+                            ? "Monitor Absensi - Sesi Nonaktif"
+                            : "Tempelkan kartu Anda untuk mencatat kehadiran"}
                     </p>
                 </div>
             </div>

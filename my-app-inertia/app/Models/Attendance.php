@@ -9,12 +9,17 @@ class Attendance extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['siswa_id', 'waktu_absen'];
+    protected $fillable = ['siswa_id', 'waktu_absen', 'pertemuan_id'];
 
     public $timestamps = false;
 
     public function siswa()
     {
         return $this->belongsTo(Siswa::class);
+    }
+
+    public function pertemuan()
+    {
+        return $this->belongsTo(Pertemuan::class);
     }
 }

@@ -4,7 +4,7 @@ import DataNotFound from "@/Components/ui/data-not-found";
 import DotLoader from "@/Components/ui/dot-loader";
 import HeaderContent from "@/Components/ui/header-content";
 import PageContent from "@/Components/ui/page-content";
-import useAllClass from "@/Hooks/data-siswa/use-all-class";
+import useAllClass from "@/Hooks/use-all-class";
 import { LucideGraduationCap, PlusCircle, School } from "lucide-react";
 
 const SelectClass = () => {
@@ -12,6 +12,7 @@ const SelectClass = () => {
 
     const breadcrumbItems = [
         { label: "Data Siswa", href: route("data-siswa.index") },
+        { label: "Pilih Kelas", href: null },
     ];
 
     if (isLoading) {

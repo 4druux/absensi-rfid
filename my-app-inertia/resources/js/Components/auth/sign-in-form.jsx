@@ -29,12 +29,27 @@ export default function SignInForm() {
             router.visit(route("home"));
         } catch (error) {
             if (error.response && error.response.status === 422) {
-                setErrors(error.response.data.errors);
-                toast.error(
-                    error.response.data.message || "Email atau password salah."
-                );
+                const backendErrors = error.response.data.errors;
+                const loginErrorMessage = "Email atau password salah.";
+
+                if (
+                    backendErrors.email &&
+                    backendErrors.email[0] === loginErrorMessage
+                ) {
+                    setErrors({
+                        email: [loginErrorMessage],
+                        password: [loginErrorMessage],
+                    });
+                } else {
+                    setErrors(backendErrors);
+                }
+
+                toast.error(error.response.data.message || loginErrorMessage);
             } else {
-                toast.error("Terjadi kesalahan pada server.");
+                toast.error(
+                    error.response?.data?.message ||
+                        "Terjadi kesalahan pada server."
+                );
             }
         } finally {
             setIsSubmitting(false);

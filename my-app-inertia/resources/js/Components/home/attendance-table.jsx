@@ -17,13 +17,13 @@ const AttendanceTable = ({ records }) => {
                 <table className="w-full">
                     <thead>
                         <tr className="bg-gray-50 border-b-2 border-gray-200">
-                            <th className="w-16 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            <th className="w-16 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 No.
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 Nama Siswa
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                 Kelas
                             </th>
                             <th className="w-40 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -36,15 +36,15 @@ const AttendanceTable = ({ records }) => {
                             records.map((record, index) => (
                                 <tr
                                     key={record.id}
-                                    className="even:bg-gray-50 hover:bg-gray-100"
+                                    className="even:bg-slate-50 hover:bg-slate-100"
                                 >
-                                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-800">
-                                        {index + 1}
+                                    <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
+                                        {index + 1}.
                                     </td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-800">
+                                    <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
                                         {record.nama}
                                     </td>
-                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                    <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
                                         {record.kelas}
                                     </td>
                                     <td className="whitespace-nowrap px-6 py-4 text-sm font-mono text-gray-500">

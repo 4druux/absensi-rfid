@@ -23,7 +23,7 @@ const BreadcrumbNav = ({ pageTitle, items }) => {
                         )}
 
                         {index < items.length - 1 && (
-                            <ChevronRight size={20} className="opacity-75" />
+                            <ChevronRight size={20} className="opacity-45" />
                         )}
                     </React.Fragment>
                 ))}

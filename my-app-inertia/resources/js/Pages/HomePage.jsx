@@ -11,13 +11,14 @@ const HomePage = () => {
         status: hookStatus,
         attendanceRecords,
         attendanceCount,
+        isSessionActive,
         isLoading,
         error,
         isAudioReady,
         initAudio,
     } = useAttendance();
 
-    if (isLoading) {
+    if (isLoading && attendanceCount === 0) {
         return (
             <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
                 <DotLoader />
@@ -29,7 +30,8 @@ const HomePage = () => {
         return (
             <div className="flex flex-col gap-4 justify-center items-center h-[80vh]">
                 <p className="text-lg text-red-600">
-                    Gagal memuat data absensi. Silakan refresh halaman.
+                    Gagal memuat data absensi. Silakan refresh halaman. (
+                    {error.message})
                 </p>
             </div>
         );
@@ -42,8 +44,8 @@ const HomePage = () => {
                 {hookStatus.title}
                 {hookStatus.detail && (
                     <>
-                        <br />
-                        <p>{hookStatus.detail}</p>
+                        {" "}
+                        <br /> <p>{hookStatus.detail}</p>{" "}
                     </>
                 )}
             </>
@@ -71,13 +73,17 @@ const HomePage = () => {
             )}
 
             <div className="space-y-4 md:space-y-6">
-                <AttendanceHeader count={attendanceCount} />
-                <StatusCard status={statusCardProp} />
-
+                <AttendanceHeader
+                    count={attendanceCount}
+                    isSessionActive={isSessionActive}
+                />
+                <StatusCard
+                    status={statusCardProp}
+                    sessionActive={isSessionActive}
+                />
                 <div className="hidden xl:block">
                     <AttendanceTable records={attendanceRecords} />
                 </div>
-
                 <div className="xl:hidden">
                     <AttendanceCard records={attendanceRecords} />
                 </div>

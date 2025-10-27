@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\AccountSettingsController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\DataSiswa\AcademicYearController;
 use App\Http\Controllers\Api\DataSiswa\DataSiswaController;
 use App\Http\Controllers\Api\DataSiswa\JurusanController;
 use App\Http\Controllers\Api\DataSiswa\KelasController;
+use App\Http\Controllers\Api\PertemuanController;
 use App\Http\Controllers\Api\UserManagementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
@@ -56,6 +58,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/all',  'getAllSiswa');
     });
 
+    Route::apiResource('pertemuan', PertemuanController::class);
+    Route::post('/pertemuan/{pertemuan}/activate', [PertemuanController::class, 'setActive']);
+    Route::post('/pertemuan/{pertemuan}/deactivate', [PertemuanController::class, 'setInactive']);
+    Route::get('/pertemuan-active-status', [PertemuanController::class, 'getActiveStatus']);
+
+    Route::get('/attendance/show/{pertemuan}', [AttendanceController::class, 'getAttendanceByPertemuan'])
+         ->name('attendance.show');
+
     // Manajemen Akun
     Route::controller(UserManagementController::class)->prefix('users')->group(function () {
         Route::get('/', 'index');
@@ -64,4 +74,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{user}/approve', 'approve');
         Route::put('/{user}/reset-password', 'resetPassword');
     });
+
+    // Pengaturan Akun
+    Route::put('/account/settings', [AccountSettingsController::class, 'updateApi']);
 });

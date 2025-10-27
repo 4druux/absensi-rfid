@@ -8,3 +8,4 @@ export * from "./tahunAjaran";
 export * from "./siswa";
 export * from "./users";
 export * from "./attendance";
+export * from "./pertemuan";

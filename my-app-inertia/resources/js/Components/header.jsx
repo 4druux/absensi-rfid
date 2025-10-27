@@ -126,7 +126,7 @@ const Header = ({ onMenuClick }) => {
                                                 </div>
                                             </div>
                                             <Link
-                                                // href={route("account.settings")}
+                                                href={route("account.settings")}
                                                 onClick={() => setIsOpen(false)}
                                                 className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
                                                 role="menuitem"

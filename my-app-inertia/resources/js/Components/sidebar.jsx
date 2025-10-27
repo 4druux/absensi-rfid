@@ -3,8 +3,8 @@ import {
     Users,
     ChevronDown,
     HomeIcon,
-    ClipboardList,
     UserCog,
+    ClipboardCheck,
 } from "lucide-react";
 import { Link } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -60,11 +60,11 @@ const Sidebar = ({ isOpen }) => {
             canView: auth.user && hasAccess("superadmin", "admin"),
         },
         {
-            id: "laporan-absensi",
-            label: "Laporan Absensi",
-            icon: ClipboardList,
-            description: "Laporan absensi siswa",
-            href: "/laporan-absensi",
+            id: "absensi-siswa",
+            label: "Absensi Siswa",
+            icon: ClipboardCheck,
+            description: "Absensi siswa",
+            href: "/absensi-siswa",
             canView: auth.user && hasAccess("superadmin", "admin"),
         },
     ];
