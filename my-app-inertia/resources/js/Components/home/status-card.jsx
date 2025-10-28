@@ -4,9 +4,22 @@ function StatusCard({ status, sessionActive }) {
     const isWaitingWithNoSession = status.type === "waiting" && !sessionActive;
 
     const getStatusStyles = () => {
-        const displayType = isWaitingWithNoSession ? "error" : status.type;
+        if (isWaitingWithNoSession) {
+            return {
+                container: "bg-white",
+                border: "border-gray-300",
+                icon: "bg-gray-500",
+                iconComponent: (
+                    <XCircle
+                        className="w-10 h-10 md:w-16 md:h-16 text-white"
+                        strokeWidth={2.5}
+                    />
+                ),
+                text: "text-gray-700",
+            };
+        }
 
-        switch (displayType) {
+        switch (status.type) {
             case "success":
                 return {
                     container:

@@ -19,6 +19,7 @@ const CardContent = ({
     onEdit,
     onToggleActive,
     isActive,
+    moreActionsButton,
     ...props
 }) => {
     const Component = href ? Link : "div";
@@ -69,7 +70,14 @@ const CardContent = ({
                         AKTIF
                     </div>
                 )}
-                <div className="flex flex-col items-center py-6">
+
+                {moreActionsButton && (
+                    <div className="absolute top-2 right-2 z-30">
+                        {moreActionsButton}
+                    </div>
+                )}
+
+                <div className="flex flex-col items-center text-center px-2 py-6">
                     {icon && (
                         <div
                             className={clsx(

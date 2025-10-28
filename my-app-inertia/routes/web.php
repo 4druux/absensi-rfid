@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AttendanceController;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,36 @@ Route::middleware(['auth', 'prevent.caching'])->group(function () {
             ]);
         })->name('show');
     });
+
+    Route::get('/export/pdf/{pertemuan}', [
+        AttendanceController::class,
+        'exportAtendanceByMeetPdf',
+    ])->name('attendance.meet.export.pdf');
+
+    Route::get('/export/excel/{pertemuan}', [
+        AttendanceController::class,
+        'exportAtendanceByMeetExcel',
+    ])->name('attendance.meet.export.excel');
+
+    Route::get('/export/class/pdf/{kelas}', [
+        AttendanceController::class,
+        'exportAtendanceByClassPdf',
+    ])->name('attendance.class.export.pdf');
+
+    Route::get('/export/class/excel/{kelas}', [
+        AttendanceController::class,
+        'exportAtendanceByClassExcel',
+    ])->name('attendance.class.export.excel');
+
+    Route::get('/export/year/pdf/{tahun_ajaran}', [
+        AttendanceController::class,
+        'exportYearReportPdf',
+    ])->name('attendance.export.year.pdf');
+
+    Route::get('/export/year/excel/{tahun_ajaran}', [
+        AttendanceController::class,
+        'exportYearReportExcel',
+    ])->name('attendance.export.year.excel');
 
     Route::inertia('/pengaturan-akun', 'Auth/AccountSettingsPage')->name('account.settings');
 });

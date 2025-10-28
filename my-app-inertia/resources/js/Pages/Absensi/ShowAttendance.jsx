@@ -15,6 +15,9 @@ import AttendanceTable from "@/Components/absensi/attendance-table";
 import useSWR from "swr";
 import { fetcher } from "@/Utils/api";
 import AttendanceCard from "@/Components/absensi/attendance-card";
+import { FaRegFilePdf } from "react-icons/fa6";
+import { RiFileExcel2Line } from "react-icons/ri";
+import { useExport } from "@/Hooks/use-export";
 
 const ShowAttendance = ({
     pertemuan_id,
@@ -33,6 +36,8 @@ const ShowAttendance = ({
         pertemuan_id ? `/api/pertemuan/${pertemuan_id}` : null,
         fetcher
     );
+
+    const { handleExport, downloadingStatus } = useExport();
 
     const currentLoading = isLoading || isLoadingPertemuan;
     const pertemuanTitle = pertemuanDetail?.title || "Memuat Judul...";
@@ -93,6 +98,28 @@ const ShowAttendance = ({
         },
     ];
 
+    const handleExportPdf = () => {
+        const params = {
+            pertemuan: pertemuan_id, 
+            kelas_id: kelas_id,
+            nama_kelas: nama_kelas,
+            nama_jurusan: nama_jurusan,
+            pertemuan_title: pertemuanTitle,
+        };
+        handleExport("pdf", "attendance.meet.export.pdf", params);
+    };
+
+    const handleExportExcel = () => {
+        const params = {
+            pertemuan: pertemuan_id, 
+            kelas_id: kelas_id,
+            nama_kelas: nama_kelas,
+            nama_jurusan: nama_jurusan,
+            pertemuan_title: pertemuanTitle,
+        };
+        handleExport("excel", "attendance.meet.export.excel", params);
+    };
+
     if (currentLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -115,12 +142,34 @@ const ShowAttendance = ({
             breadcrumbItems={breadcrumbItems}
             pageClassName="mt-4"
         >
-            <div>
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6 lg:gap-4">
                 <HeaderContent
                     Icon={List}
                     title={`Absensi ${pertemuanTitle}`}
                     details={studentDetails}
                 />
+                <div className="flex justify-end gap-2 flex-shrink-0">
+                    <Button
+                        variant="outline"
+                        onClick={handleExportPdf}
+                        size={{ base: "md", md: "lg" }}
+                        iconLeft={<FaRegFilePdf className="h-5 w-5" />}
+                        disabled={downloadingStatus.pdf}
+                    >
+                        {downloadingStatus.pdf ? "Mengunduh..." : "Export Pdf"}
+                    </Button>
+
+                    <Button
+                        onClick={handleExportExcel}
+                        size={{ base: "md", md: "lg" }}
+                        iconLeft={<RiFileExcel2Line className="h-5 w-5" />}
+                        disabled={downloadingStatus.excel}
+                    >
+                        {downloadingStatus.excel
+                            ? "Mengunduh..."
+                            : "Export Excel"}
+                    </Button>
+                </div>
             </div>
 
             {attendanceData.length > 0 ? (
