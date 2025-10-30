@@ -18,7 +18,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
-class AttendanceMeetExport implements
+class AttendanceClassAbsentSheet implements
     FromCollection,
     WithHeadings,
     WithMapping,
@@ -28,41 +28,40 @@ class AttendanceMeetExport implements
     WithCustomStartCell,
     WithEvents
 {
-    protected $data;
-    protected $reportInfo;
+    protected $title;
+    protected $pertemuanList;
+    protected $siswaData;
     protected $headings;
+    protected $tahunAjaran;
     protected $mapIteration;
     protected $lastColumn;
     protected $totalRows;
 
-    public function __construct(Collection $data, array $reportInfo)
+    public function __construct(string $title, Collection $pertemuanList, Collection $siswaData, string $tahunAjaran)
     {
-        $this->data = $data;
-        $this->reportInfo = $reportInfo;
-        $this->mapIteration = 0;
+        $this->title = $title;
+        $this->pertemuanList = $pertemuanList;
+        $this->siswaData = $siswaData;
+        $this->tahunAjaran = $tahunAjaran;
 
-        $this->headings = [
-            'No',
-            'Nama Siswa',
-            'Jenis Kelamin',
-            'RFID',
-            'Status',
-            'Tanggal Absen',
-            'Waktu Absen',
-        ];
+        $this->headings = ['No', 'Nama Siswa', 'RFID'];
+        foreach ($this->pertemuanList as $pertemuan) {
+            $this->headings[] = $pertemuan->title . "\n(" . $pertemuan->tanggal . ")";
+        }
 
         $this->lastColumn = Coordinate::stringFromColumnIndex(count($this->headings));
-        $this->totalRows = $this->data->count() + 5;
+        $this->totalRows = $this->siswaData->count() + 5;
+        $this->mapIteration = 0;
     }
 
     public function collection()
     {
-        return $this->data;
+        return $this->siswaData;
     }
 
     public function title(): string
     {
-        return $this->reportInfo['namaKelas'] ?? 'Laporan Pertemuan';
+        return $this->title;
     }
 
     public function headings(): array
@@ -74,20 +73,21 @@ class AttendanceMeetExport implements
     {
         $this->mapIteration++;
 
-        $jenisKelamin = '-';
-        if (isset($row['jenis_kelamin'])) {
-            $jenisKelamin = $row['jenis_kelamin'] === 'L' ? 'Laki-laki' : 'Perempuan';
-        }
-
-        return [
+        $rowData = [
             $this->mapIteration,
             $row['nama'],
-            $jenisKelamin,
             $row['rfid'] ?? '-',
-            $row['status'] === 'Hadir' ? '✓' : ($row['status'] === 'Alfa' ? 'A' : $row['status']),
-            $row['tanggal_absen'] ?? '-',
-            $row['waktu_absen'] ?? '-',
         ];
+
+        foreach ($row['status'] as $status) {
+            if ($status === 'Alfa') {
+                $rowData[] = 'A';
+            } else {
+                $rowData[] = '';
+            }
+        }
+
+        return $rowData;
     }
 
     public function startCell(): string
@@ -102,16 +102,13 @@ class AttendanceMeetExport implements
                 $sheet = $event->sheet->getDelegate();
 
                 $sheet->mergeCells('A1:' . $this->lastColumn . '1');
-                $sheet->setCellValue('A1', 'LAPORAN ABSENSI PER PERTEMUAN');
+                $sheet->setCellValue('A1', 'LAPORAN ABSENSI (HANYA TIDAK HADIR)');
 
                 $sheet->mergeCells('A2:' . $this->lastColumn . '2');
                 $sheet->setCellValue('A2', 'SMK YAPIA PARUNG');
 
                 $sheet->mergeCells('A3:' . $this->lastColumn . '3');
-                $sheet->setCellValue('A3', $this->reportInfo['namaKelas'] ?? 'N/A');
-                
-                $sheet->mergeCells('A4:' . $this->lastColumn . '4');
-                $sheet->setCellValue('A4', ($this->reportInfo['pertemuanTitle'] ?? 'N/A') . ' (' . ($this->reportInfo['tanggal'] ?? 'N/A') . ')');
+                $sheet->setCellValue('A3', 'Tahun Ajaran: ' . $this->tahunAjaran);
 
                 $headerStyle = [
                     'font' => ['bold' => true, 'size' => 12],
@@ -120,9 +117,7 @@ class AttendanceMeetExport implements
                         'vertical' => Alignment::VERTICAL_CENTER,
                     ],
                 ];
-                $sheet->getStyle('A1:A4')->applyFromArray($headerStyle);
-                $sheet->getStyle('A3')->getFont()->setBold(false)->setSize(11);
-                $sheet->getStyle('A4')->getFont()->setBold(false)->setSize(11);
+                $sheet->getStyle('A1:A3')->applyFromArray($headerStyle);
             },
         ];
     }
@@ -138,7 +133,11 @@ class AttendanceMeetExport implements
                 'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => 'C4D79B']
             ],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
         ]);
 
         $tableRange = 'A' . $headerRow . ':' . $this->lastColumn . $this->totalRows;
@@ -151,8 +150,14 @@ class AttendanceMeetExport implements
             ],
         ]);
         
-        // Center align
         $sheet->getStyle('A6:A' . $this->totalRows)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('C6:G' . $this->totalRows)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('C6:C' . $this->totalRows)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $statusColumnStart = 'D';
+        if (count($this->headings) > 3) {
+             $sheet->getStyle($statusColumnStart . '6:' . $this->lastColumn . $this->totalRows)
+                   ->getAlignment()
+                   ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        }
     }
 }

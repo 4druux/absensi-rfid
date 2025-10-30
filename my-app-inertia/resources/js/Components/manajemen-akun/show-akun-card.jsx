@@ -1,24 +1,15 @@
-import {
-    LockKeyholeOpen,
-    Mail,
-    PenLine,
-    Trash2,
-    Fingerprint,
-} from "lucide-react";
+import { LockKeyholeOpen, Mail, PenLine, Trash2 } from "lucide-react";
 import React from "react";
 import Button from "@/Components/ui/button";
 
 const ShowAkunCard = ({
     users,
     type,
-    role,
     onApprove,
     onReject,
     isProcessing,
     onOpenResetPasswordModal,
 }) => {
-    const isSiswa = role === "siswa";
-
     return (
         <div className="grid grid-cols-1 gap-4">
             {users.map((user, index) => (
@@ -37,16 +28,13 @@ const ShowAkunCard = ({
                                 </p>
 
                                 <div className="flex items-center gap-2 text-gray-800">
-                                    {isSiswa ? (
-                                        <Fingerprint className="w-5 h-5" />
-                                    ) : (
-                                        <Mail className="w-5 h-5" />
-                                    )}
+                                    <Mail className="w-5 h-5" />
+
                                     <div className="flex flex-col text-sm font-medium">
                                         <span className="font-normal">
-                                            {isSiswa ? "No Peserta: " : "Email: "}
+                                            Email
                                         </span>
-                                        {isSiswa ? user.no_peserta : user.email}
+                                        {user.email}
                                     </div>
                                 </div>
 
@@ -65,7 +53,7 @@ const ShowAkunCard = ({
 
                     <div className="p-2 border-t rounded-b-xl border-slate-300 bg-gray-100">
                         <div className="flex justify-end gap-2">
-                            {type === "pending" &&  (
+                            {type === "pending" && (
                                 <>
                                     <Button
                                         size="md"

@@ -150,4 +150,23 @@ class PertemuanController extends Controller
         $isActive = Pertemuan::where('is_active', true)->exists();
         return response()->json(['is_active' => $isActive]);
     }
+
+    public function getPertemuanByYear($tahun_ajaran)
+    {
+        if (!preg_match('/^\d{4}-\d{4}$/', $tahun_ajaran)) {
+            abort(400, 'Format tahun ajaran tidak valid.');
+        }
+
+        $pertemuan = Pertemuan::where('tahun_ajaran', $tahun_ajaran)
+            ->orderBy('gender')
+            ->orderBy('created_at', 'asc')
+            ->select(
+                'id',
+                'gender',
+                DB::raw("CONCAT(title, ' (', DATE_FORMAT(created_at, '%d/%m/%Y'), ')') as title")
+            )
+            ->get();
+
+        return response()->json($pertemuan);
+    }
 }

@@ -1,7 +1,8 @@
 import React from "react";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import Button from "@/Components/ui/button";
 
-const AttendanceTable = ({ records }) => {
+const AttendanceTable = ({ records, onToggle, isToggling }) => {
     return (
         <div className="overflow-x-auto">
             <table className="w-full">
@@ -27,6 +28,9 @@ const AttendanceTable = ({ records }) => {
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                             Waktu Absen
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                            Aksi
                         </th>
                     </tr>
                 </thead>
@@ -74,6 +78,49 @@ const AttendanceTable = ({ records }) => {
                             </td>
                             <td className="whitespace-nowrap px-4 py-4 text-sm font-mono text-gray-500">
                                 {record.waktu_absen || "-"}
+                            </td>
+
+                            <td className="whitespace-nowrap px-4 py-4 text-sm">
+                                {/* <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={
+                                        record.status === "Hadir"
+                                            ? "text-red-600 border-red-500 hover:bg-red-50"
+                                            : "text-emerald-600 border-emerald-500 hover:bg-emerald-50"
+                                    }
+                                    onClick={() => onToggle(record.siswa_id)}
+                                    disabled={isToggling === record.siswa_id}
+                                >
+                                    {isToggling === record.siswa_id
+                                        ? "..."
+                                        : record.status === "Hadir"
+                                        ? "Batalkan"
+                                        : "Hadirkan"}
+                                </Button> */}
+
+                                {record.status !== "Hadir" && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-emerald-600 border-emerald-500 hover:bg-emerald-50"
+                                        onClick={() =>
+                                            onToggle(record.siswa_id)
+                                        }
+                                        disabled={
+                                            isToggling === record.siswa_id
+                                        }
+                                        iconLeft={
+                                            isToggling === record.siswa_id ? (
+                                                <Loader2 className="animate-spin h-3.5 w-3.5" />
+                                            ) : null
+                                        }
+                                    >
+                                        {isToggling === record.siswa_id
+                                            ? "Loading..."
+                                            : "Hadirkan"}
+                                    </Button>
+                                )}
                             </td>
                         </tr>
                     ))}

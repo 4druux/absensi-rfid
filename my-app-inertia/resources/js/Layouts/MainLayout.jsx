@@ -87,7 +87,7 @@ export default function MainLayout({ children, title }) {
                         isSidebarOpen ? "lg:ml-72" : "lg:ml-0"
                     }`}
                 >
-                    <main className="px-4 lg:px-6 mt-2">{children}</main>
+                    <main className="px-4 lg:px-6 mt-6 lg:mt-2">{children}</main>
                 </div>
             </div>
         </div>

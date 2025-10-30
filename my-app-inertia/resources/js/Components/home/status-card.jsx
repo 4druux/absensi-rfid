@@ -1,6 +1,6 @@
 import { CreditCard, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 
-function StatusCard({ status, sessionActive }) {
+function StatusCard({ status, sessionActive, className = "" }) {
     const isWaitingWithNoSession = status.type === "waiting" && !sessionActive;
 
     const getStatusStyles = () => {
@@ -87,14 +87,24 @@ function StatusCard({ status, sessionActive }) {
             <>
                 Tidak Ada Sesi Aktif
                 <br />
-                <p>Mulai sesi absensi dari halaman admin untuk scan.</p>
+                <p>Mulai sesi absensi untuk scan.</p>
             </>
         );
     }
 
     return (
         <div
-            className={`bg-white rounded-lg p-3 border md:py-9 ${styles.container} transition-all duration-300 ease-in-out`}
+            className={`
+                bg-white rounded-lg p-3 border 
+                ${styles.container} 
+                transition-all duration-300 ease-in-out
+                ${
+                    className
+                        ? "flex flex-col items-center justify-center"
+                        : "md:py-9"
+                }
+                ${className}
+            `}
         >
             <div className="text-center">
                 {status.type === "waiting" && sessionActive && (

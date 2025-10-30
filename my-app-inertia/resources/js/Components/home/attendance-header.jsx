@@ -55,32 +55,32 @@ function AttendanceHeader({ count, isSessionActive }) {
 
     return (
         <div className="grid md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-2 md:gap-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-3 md:p-6 border border-indigo-200">
-                <div className="flex items-center justify-center w-10 h-10 md:w-14 md:h-14 bg-indigo-500 rounded-full">
+            <div className="flex items-center gap-2 md:gap-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-3 md:p-6 border border-amber-200">
+                <div className="flex items-center justify-center w-10 h-10 md:w-14 md:h-14 bg-amber-500 rounded-full">
                     <Clock
                         className="w-5 h-5 md:w-7 md:h-7 text-white"
                         strokeWidth={2}
                     />
                 </div>
-                <div className="text-indigo-500">
+                <div className="text-amber-500">
                     <p className="text-sm md:text-md font-medium">
                         Waktu Saat Ini
                     </p>
-                    <p className="text-md md:text-lg font-semibold tracking-tight">
+                    <p className="text-md md:text-2xl font-bold tracking-tight">
                         {formatTime(currentTime)}
                     </p>
                 </div>
             </div>
-            <div className="flex items-center gap-2 md:gap-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 md:p-6 border border-blue-200">
-                <div className="flex items-center justify-center w-10 h-10 md:w-14 md:h-14 bg-blue-500 rounded-full">
+            <div className="flex items-center gap-2 md:gap-4 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg p-3 md:p-6 border border-cyan-200">
+                <div className="flex items-center justify-center w-10 h-10 md:w-14 md:h-14 bg-cyan-500 rounded-full">
                     <Calendar
                         className="w-5 h-5 md:w-7 md:h-7 text-white"
                         strokeWidth={2}
                     />
                 </div>
-                <div className="text-blue-500">
+                <div className="text-cyan-500">
                     <p className="text-sm md:text-md font-medium">Tanggal</p>
-                    <p className="text-md md:text-lg font-semibold tracking-tight">
+                    <p className="text-md md:text-2xl font-bold tracking-tight">
                         {formatDate(currentTime)}
                     </p>
                 </div>
@@ -118,7 +118,7 @@ function AttendanceHeader({ count, isSessionActive }) {
                         Sesi Absensi {sessionText}
                     </p>
                     {isSessionActive && (
-                        <p className="text-md md:text-lg font-semibold tracking-tight">
+                        <p className="text-md md:text-2xl font-bold tracking-tight">
                             {count} Siswa Hadir
                         </p>
                     )}

@@ -116,7 +116,7 @@ const Sidebar = ({ isOpen }) => {
         <aside
             className={`
         fixed top-0 left-0 bg-white z-50 rounded-r-xl lg:rounded-lg border transition-transform duration-300 ease-in-out w-[270px] 
-        h-full lg:h-[calc(93vh-2.5rem)] lg:top-24
+        h-full lg:h-[calc(91vh-2.5rem)] lg:top-28
         ${isOpen ? "translate-x-0 lg:left-6" : "-translate-x-full"}`}
         >
             <div className="h-full flex flex-col">
@@ -124,10 +124,10 @@ const Sidebar = ({ isOpen }) => {
                     <div className="flex items-center gap-2 lg:gap-4">
                         <div>
                             <h1 className="text-md md:text-lg uppercase font-medium text-gray-700">
-                                S** ***** {new Date().getFullYear()}
+                                Smk yapia parung
                             </h1>
                             <p className="text-xs md:text-sm text-gray-600">
-                                Ujian Online
+                                Absensi Online
                             </p>
                         </div>
                     </div>
@@ -340,7 +340,8 @@ const Sidebar = ({ isOpen }) => {
                                 variants={footerVariants}
                                 className="text-xs uppercase text-gray-500 text-center"
                             >
-                                S** ***** &copy; {new Date().getFullYear()}
+                                Smk Yapia Parung &copy;{" "}
+                                {new Date().getFullYear()}
                             </motion.div>
                         </div>
                     )}

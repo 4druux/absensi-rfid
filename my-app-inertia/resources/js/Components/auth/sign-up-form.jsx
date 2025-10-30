@@ -48,9 +48,6 @@ export default function SignUpForm() {
     return (
         <div className="w-full max-w-md px-4 md:px-0">
             <div className="flex flex-col items-start">
-                <h2 className="font-medium text-lg text-indigo-600">
-                    Smk Yapia Parung (LOGO)
-                </h2>
                 <h1 className="mt-4 text-3xl text-gray-700">
                     Selamat Datang! 👋
                 </h1>
@@ -58,6 +55,7 @@ export default function SignUpForm() {
                     Silakan daftar akun Anda, dan mulai menggunakan aplikasi.
                 </p>
             </div>
+
             <form className="mt-8 space-y-6" onSubmit={handleSubmit} noValidate>
                 <InputField
                     id="name"

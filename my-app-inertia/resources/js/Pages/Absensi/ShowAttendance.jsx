@@ -27,10 +27,8 @@ const ShowAttendance = ({
     nama_kelas,
     nama_jurusan,
 }) => {
-    const { attendanceData, isLoading, error } = useShowAttendance(
-        pertemuan_id,
-        kelas_id
-    );
+    const { attendanceData, isLoading, error, isToggling, toggleAttendance } =
+        useShowAttendance(pertemuan_id, kelas_id);
 
     const { data: pertemuanDetail, isLoading: isLoadingPertemuan } = useSWR(
         pertemuan_id ? `/api/pertemuan/${pertemuan_id}` : null,
@@ -100,7 +98,7 @@ const ShowAttendance = ({
 
     const handleExportPdf = () => {
         const params = {
-            pertemuan: pertemuan_id, 
+            pertemuan: pertemuan_id,
             kelas_id: kelas_id,
             nama_kelas: nama_kelas,
             nama_jurusan: nama_jurusan,
@@ -111,7 +109,7 @@ const ShowAttendance = ({
 
     const handleExportExcel = () => {
         const params = {
-            pertemuan: pertemuan_id, 
+            pertemuan: pertemuan_id,
             kelas_id: kelas_id,
             nama_kelas: nama_kelas,
             nama_jurusan: nama_jurusan,
@@ -175,11 +173,19 @@ const ShowAttendance = ({
             {attendanceData.length > 0 ? (
                 <>
                     <div className="hidden xl:block">
-                        <AttendanceTable records={attendanceData} />
+                        <AttendanceTable
+                            records={attendanceData}
+                            onToggle={toggleAttendance}
+                            isToggling={isToggling}
+                        />
                     </div>
 
                     <div className="xl:hidden">
-                        <AttendanceCard records={attendanceData} />
+                        <AttendanceCard
+                            records={attendanceData}
+                            onToggle={toggleAttendance}
+                            isToggling={isToggling}
+                        />
                     </div>
                 </>
             ) : (

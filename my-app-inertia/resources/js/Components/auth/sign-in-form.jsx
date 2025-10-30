@@ -59,9 +59,6 @@ export default function SignInForm() {
     return (
         <div className="w-full max-w-md px-4 md:px-0">
             <div className="flex flex-col items-start">
-                <h2 className="font-medium text-lg text-indigo-600">
-                    Smk Yapia Parung (LOGO)
-                </h2>
                 <h1 className="mt-4 text-3xl text-gray-700">
                     Selamat Datang! 👋
                 </h1>
@@ -73,7 +70,7 @@ export default function SignInForm() {
                 <InputField
                     id="email"
                     name="email"
-                    label="Email atau No Peserta"
+                    label="Email"
                     type="text"
                     value={values.email}
                     onChange={handleChange}

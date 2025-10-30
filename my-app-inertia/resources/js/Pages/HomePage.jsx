@@ -4,7 +4,7 @@ import StatusCard from "@/Components/home/status-card";
 import AttendanceCard from "@/Components/home/attendance-card";
 import { useAttendance } from "@/Hooks/use-attendance";
 import DotLoader from "@/Components/ui/dot-loader";
-import { Volume2 } from "lucide-react";
+import { Monitor } from "lucide-react";
 
 const HomePage = () => {
     const {
@@ -14,8 +14,6 @@ const HomePage = () => {
         isSessionActive,
         isLoading,
         error,
-        isAudioReady,
-        initAudio,
     } = useAttendance();
 
     if (isLoading && attendanceCount === 0) {
@@ -53,25 +51,7 @@ const HomePage = () => {
     };
 
     return (
-        <>
-            {!isAudioReady && (
-                <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99] flex items-center justify-center cursor-pointer"
-                    onClick={initAudio}
-                >
-                    <div className="flex flex-col items-center gap-4 text-white p-6 rounded-lg text-center">
-                        <Volume2 className="w-16 h-16" />
-                        <h2 className="text-2xl font-bold">
-                            Aktifkan Notifikasi Suara
-                        </h2>
-                        <p className="text-lg">
-                            Klik di mana saja untuk mengaktifkan suara saat
-                            scan.
-                        </p>
-                    </div>
-                </div>
-            )}
-
+        <div className="mb-4">
             <div className="space-y-4 md:space-y-6">
                 <AttendanceHeader
                     count={attendanceCount}
@@ -88,7 +68,40 @@ const HomePage = () => {
                     <AttendanceCard records={attendanceRecords} />
                 </div>
             </div>
-        </>
+
+            <a
+                href={route("monitor")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                    fixed top-1/2 right-0 z-50 transform -translate-y-1/2 
+                    flex items-center 
+                    bg-indigo-600/60 text-white 
+                    rounded-l-full shadow-lg 
+                    h-12 
+                    group 
+                    transition-all duration-300 ease-in-out
+                    overflow-hidden
+                    hover:shadow-xl hover:pr-5
+                    focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2
+                "
+            >
+                <div className="p-3">
+                    <Monitor className="w-6 h-6" />
+                </div>
+
+                <span
+                    className="
+                        font-medium whitespace-nowrap 
+                        max-w-0 opacity-0 
+                        group-hover:max-w-xs group-hover:opacity-100 
+                        transition-all duration-300 ease-in-out hover:underline text-sm
+                    "
+                >
+                    Buka Monitor
+                </span>
+            </a>
+        </div>
     );
 };
 

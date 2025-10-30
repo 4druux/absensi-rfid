@@ -7,9 +7,11 @@ import {
     Mars,
     Venus,
     Fingerprint,
+    Loader2,
 } from "lucide-react";
+import Button from "@/Components/ui/button";
 
-const AttendanceCard = ({ records }) => {
+const AttendanceCard = ({ records, onToggle, isToggling }) => {
     return (
         <div className="grid grid-cols-1 gap-4">
             {records.map((record, index) => (
@@ -55,7 +57,7 @@ const AttendanceCard = ({ records }) => {
                             </div>
                         </div>
 
-                        <div className="flex-shrink-0">
+                        <div className="flex-shrink-0 flex flex-col items-end gap-2">
                             {record.status === "Hadir" ? (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-600">
                                     <CheckCircle2 className="h-3 w-3" /> Hadir
@@ -65,7 +67,45 @@ const AttendanceCard = ({ records }) => {
                                     <XCircle className="h-3 w-3" /> Alfa
                                 </span>
                             )}
+                            {/* <Button
+                                variant="outline"
+                                size="sm"
+                                className={`text-xs ${
+                                    record.status === "Hadir"
+                                        ? "text-red-600 border-red-500 hover:bg-red-50"
+                                        : "text-emerald-600 border-emerald-500 hover:bg-emerald-50"
+                                }`}
+                                onClick={() => onToggle(record.siswa_id)}
+                                disabled={isToggling === record.siswa_id}
+                            >
+                                {isToggling === record.siswa_id
+                                    ? "..."
+                                    : record.status === "Hadir"
+                                    ? "Batalkan"
+                                    : "Hadirkan"}
+                            </Button> */}
                         </div>
+                    </div>
+
+                    <div className="flex items-end justify-end pr-4 pb-4">
+                        {record.status !== "Hadir" && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-emerald-600 border-emerald-500 hover:bg-emerald-50"
+                                onClick={() => onToggle(record.siswa_id)}
+                                disabled={isToggling === record.siswa_id}
+                                iconLeft={
+                                    isToggling === record.siswa_id ? (
+                                        <Loader2 className="animate-spin h-3.5 w-3.5" />
+                                    ) : null
+                                }
+                            >
+                                {isToggling === record.siswa_id
+                                    ? "Loading..."
+                                    : "Hadirkan"}
+                            </Button>
+                        )}
                     </div>
 
                     {record.status === "Hadir" && (

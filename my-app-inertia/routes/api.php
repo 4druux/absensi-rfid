@@ -19,6 +19,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Absensi
 Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
 Route::get('/attendance/today', [AttendanceController::class, 'getTodaysAttendance']);
+Route::get('/pertemuan-active-status', [PertemuanController::class, 'getActiveStatus']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Jurusan
@@ -61,10 +62,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('pertemuan', PertemuanController::class);
     Route::post('/pertemuan/{pertemuan}/activate', [PertemuanController::class, 'setActive']);
     Route::post('/pertemuan/{pertemuan}/deactivate', [PertemuanController::class, 'setInactive']);
-    Route::get('/pertemuan-active-status', [PertemuanController::class, 'getActiveStatus']);
+    Route::get('/pertemuan-by-year/{tahun_ajaran}', [PertemuanController::class, 'getPertemuanByYear']);
 
-    Route::get('/attendance/show/{pertemuan}', [AttendanceController::class, 'getAttendanceByPertemuan'])
-         ->name('attendance.show');
+    Route::get('/attendance/show/{pertemuan}', [AttendanceController::class, 'getAttendanceByPertemuan']);
+    Route::post('/attendance/manual', [AttendanceController::class, 'manualAttendance']);
 
     // Manajemen Akun
     Route::controller(UserManagementController::class)->prefix('users')->group(function () {

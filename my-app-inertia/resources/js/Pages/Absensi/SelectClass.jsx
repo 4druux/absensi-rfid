@@ -9,18 +9,27 @@ import useAllClass from "@/Hooks/use-all-class";
 import { useExport } from "@/Hooks/use-export";
 import { ArrowLeft, LucideGraduationCap, Ellipsis, School } from "lucide-react";
 import DropdownCardExport from "@/Components/ui/dropdown-card-export";
+import ExportPertemuanModal from "@/Components/ui/export-pertemuan-modal";
 
 const SelectClass = ({ tahun_ajaran }) => {
     const { allKelas, isLoading, error, handleDelete } = useAllClass();
     const { handleExport, downloadingStatus } = useExport();
     const [openDropdownId, setOpenDropdownId] = useState(null);
-    const dropdownRef = useRef(null);
+    const dropdownRefs = useRef({});
+
+    const [modalState, setModalState] = useState({
+        isOpen: false,
+        tahunAjaran: null,
+        kelasInfo: null,
+        exportType: null,
+    });
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(event.target)
+                openDropdownId &&
+                dropdownRefs.current[openDropdownId] &&
+                !dropdownRefs.current[openDropdownId].contains(event.target)
             ) {
                 setOpenDropdownId(null);
             }
@@ -34,6 +43,42 @@ const SelectClass = ({ tahun_ajaran }) => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [openDropdownId]);
+
+    const handleModalSubmit = (pertemuanIds) => {
+        const { kelasInfo, exportType, tahunAjaran } = modalState;
+
+        if (!kelasInfo || !exportType || !pertemuanIds) return;
+
+        const params = {
+            kelas: kelasInfo.id,
+            tahun_ajaran: tahunAjaran,
+            nama_kelas_lengkap: kelasInfo.nama_kelas_lengkap,
+            nama_jurusan: kelasInfo.nama_jurusan,
+            pertemuan_ids: pertemuanIds,
+        };
+
+        let downloadId = "";
+        let routeName = "";
+
+        if (exportType === "pdf-all") {
+            downloadId = `pdf-${kelasInfo.id}`;
+            routeName = "attendance.class.export.pdf";
+        } else if (exportType === "excel-all") {
+            downloadId = `excel-${kelasInfo.id}`;
+            routeName = "attendance.class.export.excel";
+        } else {
+            return;
+        }
+
+        handleExport(downloadId, routeName, params);
+
+        setModalState({
+            isOpen: false,
+            tahunAjaran: null,
+            kelasInfo: null,
+            exportType: null,
+        });
+    };
 
     const breadcrumbItems = [
         { label: "Absensi Siswa", href: route("absensi-siswa.years") },
@@ -90,7 +135,6 @@ const SelectClass = ({ tahun_ajaran }) => {
             ? groupedByYearAndLevel[tahun_ajaran]
             : {};
 
-
     return (
         <PageContent
             pageTitle="Absensi Siswa"
@@ -113,39 +157,29 @@ const SelectClass = ({ tahun_ajaran }) => {
                                     {yearGroups[level].map((kelas) => {
                                         const namaKelasLengkap = `${kelas.nama_kelas} ${kelas.kelompok}`;
 
-                                        const handleExportPdfForClass = () => {
-                                            const params = {
-                                                kelas: kelas.kelas_id,
-                                                tahun_ajaran: tahun_ajaran,
-                                                nama_kelas_lengkap:
-                                                    namaKelasLengkap,
-                                                nama_jurusan:
-                                                    kelas.nama_jurusan,
-                                            };
-                                            handleExport(
-                                                `pdf-${kelas.kelas_id}`,
-                                                "attendance.class.export.pdf",
-                                                params
-                                            );
-                                            setOpenDropdownId(null);
-                                        };
-
-                                        const handleExportExcelForClass =
-                                            () => {
-                                                const params = {
-                                                    kelas: kelas.kelas_id,
-                                                    tahun_ajaran: tahun_ajaran,
+                                        const handleOpenModal = (type) => {
+                                            setModalState({
+                                                isOpen: true,
+                                                tahunAjaran: tahun_ajaran,
+                                                kelasInfo: {
+                                                    id: kelas.kelas_id,
                                                     nama_kelas_lengkap:
                                                         namaKelasLengkap,
                                                     nama_jurusan:
                                                         kelas.nama_jurusan,
-                                                };
-                                                handleExport(
-                                                    `excel-${kelas.kelas_id}`,
-                                                    "attendance.class.export.excel",
-                                                    params
-                                                );
-                                                setOpenDropdownId(null);
+                                                },
+                                                exportType: type,
+                                            });
+                                            setOpenDropdownId(null);
+                                        };
+
+                                        const handleExportPdfForClass = () => {
+                                            handleOpenModal("pdf-all");
+                                        };
+
+                                        const handleExportExcelForClass =
+                                            () => {
+                                                handleOpenModal("excel-all");
                                             };
 
                                         const isCurrentPdfDownloading =
@@ -214,7 +248,11 @@ const SelectClass = ({ tahun_ajaran }) => {
                                                         openDropdownId ===
                                                         kelas.kelas_id
                                                     }
-                                                    dropdownRef={dropdownRef}
+                                                    dropdownRef={(el) =>
+                                                        (dropdownRefs.current[
+                                                            kelas.kelas_id
+                                                        ] = el)
+                                                    }
                                                     onExportPdf={
                                                         handleExportPdfForClass
                                                     }
@@ -254,6 +292,14 @@ const SelectClass = ({ tahun_ajaran }) => {
                     Kembali
                 </Button>
             </div>
+
+            <ExportPertemuanModal
+                isOpen={modalState.isOpen}
+                onClose={() => setModalState({ ...modalState, isOpen: false })}
+                onSubmit={handleModalSubmit}
+                tahunAjaran={modalState.tahunAjaran}
+                namaKelas={modalState.kelasInfo?.nama_kelas_lengkap}
+            />
         </PageContent>
     );
 };

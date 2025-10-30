@@ -2,6 +2,7 @@ import CardContent from "@/Components/ui/card-content";
 import DataNotFound from "@/Components/ui/data-not-found";
 import DotLoader from "@/Components/ui/dot-loader";
 import DropdownCardExport from "@/Components/ui/dropdown-card-export";
+import ExportPertemuanModal from "@/Components/ui/export-pertemuan-modal";
 import HeaderContent from "@/Components/ui/header-content";
 import PageContent from "@/Components/ui/page-content";
 import useAcademicYears from "@/Hooks/use-academic-years";
@@ -13,17 +14,25 @@ const SelectYears = () => {
     const { academicYears, isLoading, error } = useAcademicYears();
     const { handleExport, downloadingStatus } = useExport();
     const [openDropdownYear, setOpenDropdownYear] = useState(null);
-    const dropdownRef = useRef(null);
+    const [modalState, setModalState] = useState({
+        isOpen: false,
+        tahunAjaran: null,
+        exportType: null,
+    });
+
+    const dropdownRefs = useRef({});
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(event.target)
+                openDropdownYear &&
+                dropdownRefs.current[openDropdownYear] &&
+                !dropdownRefs.current[openDropdownYear].contains(event.target)
             ) {
                 setOpenDropdownYear(null);
             }
         };
+
         if (openDropdownYear) {
             document.addEventListener("mousedown", handleClickOutside);
         }
@@ -31,6 +40,52 @@ const SelectYears = () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [openDropdownYear]);
+
+    const handleOpenModal = (type, tahunAjaran) => {
+        setModalState({
+            isOpen: true,
+            tahunAjaran: tahunAjaran,
+            exportType: type,
+        });
+        setOpenDropdownYear(null);
+    };
+
+    const handleModalSubmit = (pertemuanIds) => {
+        const { tahunAjaran, exportType } = modalState;
+
+        if (!tahunAjaran || !exportType || !pertemuanIds) return;
+
+        const params = {
+            tahun_ajaran: tahunAjaran,
+            pertemuan_ids: pertemuanIds,
+        };
+
+        let downloadId = "";
+        let routeName = "";
+
+        switch (exportType) {
+            case "pdf-all":
+                downloadId = `pdf-all-${tahunAjaran}`;
+                routeName = "attendance.export.year.pdf";
+                break;
+            case "excel-all":
+                downloadId = `excel-all-${tahunAjaran}`;
+                routeName = "attendance.export.year.excel";
+                break;
+            case "pdf-absent":
+                downloadId = `pdf-absent-${tahunAjaran}`;
+                routeName = "attendance.export.year.absent.pdf";
+                break;
+            case "excel-absent":
+                downloadId = `excel-absent-${tahunAjaran}`;
+                routeName = "attendance.export.year.absent.excel";
+                break;
+            default:
+                return;
+        }
+
+        handleExport(downloadId, routeName, params);
+    };
 
     const breadcrumbItems = [
         { label: "Absensi Siswa", href: route("absensi-siswa.years") },
@@ -70,41 +125,27 @@ const SelectYears = () => {
             {academicYears && academicYears.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {academicYears.map((year) => {
-                        const handleExportPdfForYear = () => {
-                            const params = { tahun_ajaran: year.year };
-                            handleExport(
-                                `pdf-${year.year}`,
-                                "attendance.export.year.pdf",
-                                params
-                            );
-                            setOpenDropdownYear(null);
-                        };
+                        const yearKey = year.year;
 
-                        const handleExportExcelForYear = () => {
-                            const params = { tahun_ajaran: year.year };
-                            handleExport(
-                                `excel-${year.year}`,
-                                "attendance.export.year.excel",
-                                params
-                            );
-                            setOpenDropdownYear(null);
-                        };
-
-                        const isCurrentPdfDownloading =
-                            downloadingStatus[`pdf-${year.year}`];
-                        const isCurrentExcelDownloading =
-                            downloadingStatus[`excel-${year.year}`];
+                        const isPdfAllDownloading =
+                            downloadingStatus[`pdf-all-${yearKey}`];
+                        const isExcelAllDownloading =
+                            downloadingStatus[`excel-all-${yearKey}`];
+                        const isPdfAbsentDownloading =
+                            downloadingStatus[`pdf-absent-${yearKey}`];
+                        const isExcelAbsentDownloading =
+                            downloadingStatus[`excel-absent-${yearKey}`];
 
                         return (
-                            <div key={year.year} className="relative">
+                            <div key={yearKey} className="relative">
                                 <CardContent
                                     href={route("absensi-siswa.class", {
-                                        tahun_ajaran: year.year,
+                                        tahun_ajaran: yearKey,
                                     })}
                                     icon={
                                         <CalendarDays className="h-12 w-12" />
                                     }
-                                    title={`Tahun Ajaran ${year.year}`}
+                                    title={`Tahun Ajaran ${yearKey}`}
                                     subtitle="Lihat daftar kelas"
                                     moreActionsButton={
                                         <button
@@ -112,10 +153,9 @@ const SelectYears = () => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
                                                 setOpenDropdownYear(
-                                                    openDropdownYear ===
-                                                        year.year
+                                                    openDropdownYear === yearKey
                                                         ? null
-                                                        : year.year
+                                                        : yearKey
                                                 );
                                             }}
                                             className="p-1.5 rounded-full hover:bg-gray-200 transition-colors"
@@ -126,13 +166,29 @@ const SelectYears = () => {
                                     }
                                 />
                                 <DropdownCardExport
-                                    isOpen={openDropdownYear === year.year}
-                                    dropdownRef={dropdownRef}
-                                    onExportPdf={handleExportPdfForYear}
-                                    onExportExcel={handleExportExcelForYear}
-                                    isDownloadingPdf={isCurrentPdfDownloading}
-                                    isDownloadingExcel={
-                                        isCurrentExcelDownloading
+                                    isOpen={openDropdownYear === yearKey}
+                                    dropdownRef={(el) =>
+                                        (dropdownRefs.current[yearKey] = el)
+                                    }
+                                    onExportPdf={() =>
+                                        handleOpenModal("pdf-all", yearKey)
+                                    }
+                                    isDownloadingPdf={isPdfAllDownloading}
+                                    onExportExcel={() =>
+                                        handleOpenModal("excel-all", yearKey)
+                                    }
+                                    isDownloadingExcel={isExcelAllDownloading}
+                                    onExportPdfAbsent={() =>
+                                        handleOpenModal("pdf-absent", yearKey)
+                                    }
+                                    isDownloadingPdfAbsent={
+                                        isPdfAbsentDownloading
+                                    }
+                                    onExportExcelAbsent={() =>
+                                        handleOpenModal("excel-absent", yearKey)
+                                    }
+                                    isDownloadingExcelAbsent={
+                                        isExcelAbsentDownloading
                                     }
                                 />
                             </div>
@@ -145,6 +201,13 @@ const SelectYears = () => {
                     message="Belum ada data tahun ajaran yang memiliki siswa."
                 />
             )}
+
+            <ExportPertemuanModal
+                isOpen={modalState.isOpen}
+                onClose={() => setModalState({ ...modalState, isOpen: false })}
+                onSubmit={handleModalSubmit}
+                tahunAjaran={modalState.tahunAjaran}
+            />
         </PageContent>
     );
 };

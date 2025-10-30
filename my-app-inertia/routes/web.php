@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/login', 'Auth/LoginPage')->name('login')->middleware('guest');
 Route::inertia('/register', 'Auth/RegisterPage')->name('register')->middleware('guest');
 
+Route::inertia('/monitor', 'MonitorPage')->name('monitor')->middleware('prevent.caching');
+
 Route::middleware(['auth', 'prevent.caching'])->group(function () {
     Route::inertia('/', 'HomePage')->name('home');
 
@@ -90,6 +92,15 @@ Route::middleware(['auth', 'prevent.caching'])->group(function () {
         AttendanceController::class,
         'exportYearReportExcel',
     ])->name('attendance.export.year.excel');
+    Route::get('/export/year/absent/pdf/{tahun_ajaran}', [
+        AttendanceController::class,
+        'exportYearReportAbsentPdf',
+    ])->name('attendance.export.year.absent.pdf');
+
+    Route::get('/export/year/absent/excel/{tahun_ajaran}', [
+        AttendanceController::class,
+        'exportYearReportAbsentExcel',
+    ])->name('attendance.export.year.absent.excel');
 
     Route::inertia('/pengaturan-akun', 'Auth/AccountSettingsPage')->name('account.settings');
 });

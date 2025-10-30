@@ -12,10 +12,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Exports\AttendanceMeetExport;
 use App\Exports\AttendanceClassExport;
+use App\Exports\AttendanceYearAbsentExport;
 use App\Exports\AttendanceYearExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceController extends Controller
 {
@@ -143,7 +145,7 @@ class AttendanceController extends Controller
                     'rfid' => $siswa->rfid,
                     'jenis_kelamin' => $siswa->jenis_kelamin,
                     'status' => 'Hadir',
-                    'tanggal_absen' => $waktu->translatedFormat('Y-m-d'),
+                    'tanggal_absen' => $waktu->translatedFormat('d-m-Y'),
                     'waktu_absen' => $waktu->translatedFormat('H:i:s'),
                 ];
             } else {
@@ -174,6 +176,50 @@ class AttendanceController extends Controller
         return response()->json($combinedData);
     }
 
+    public function manualAttendance(Request $request)
+    {
+        $request->validate([
+            'siswa_id' => 'required|exists:siswas,id',
+            'pertemuan_id' => 'required|exists:pertemuans,id',
+        ]);
+
+        $siswaId = $request->siswa_id;
+        $pertemuanId = $request->pertemuan_id;
+
+        $attendance = Attendance::where('siswa_id', $siswaId)
+            ->where('pertemuan_id', $pertemuanId)
+            ->first();
+
+        if ($attendance) {
+            $attendance->delete();
+            return response()->json(['status' => 'deleted', 'message' => 'Absensi dibatalkan.']);
+        } else {
+            $pertemuan = Pertemuan::find($pertemuanId);
+            $siswa = Siswa::with('academicYear')->find($siswaId);
+
+            if (
+                !$siswa ||
+                !$siswa->academicYear ||
+                $siswa->academicYear->year != $pertemuan->tahun_ajaran ||
+                $siswa->jenis_kelamin != $pertemuan->gender
+            ) {
+                return response()->json(['message' => 'Siswa tidak sesuai dengan kriteria pertemuan ini.'], 422);
+            }
+
+            $newAttendance = Attendance::create([
+                'siswa_id' => $siswaId,
+                'pertemuan_id' => $pertemuanId,
+                'waktu_absen' => now(),
+            ]);
+
+            return response()->json([
+                'status' => 'created',
+                'message' => 'Siswa ditandai hadir.',
+                'record' => $newAttendance,
+            ], 201);
+        }
+    }
+
     public function exportAtendanceByMeetPdf(Pertemuan $pertemuan, Request $request)
     {
         $request->validate([
@@ -195,8 +241,10 @@ class AttendanceController extends Controller
             'alfaCount' => $data->where('status', 'Alfa')->count(),
         ];
 
+        $viewData['logoPath'] = 'images/logo-smk.png';
+
         $pdf = PDF::loadView('exports.attendance-meet-pdf', $viewData);
-        $fileName = "absensi_{$request->nama_kelas}_{$request->pertemuan_title}.pdf";
+        $fileName = "absensi-{$request->nama_kelas}-{$request->pertemuan_title}.pdf";
 
         return $pdf->download($fileName);
     }
@@ -211,19 +259,38 @@ class AttendanceController extends Controller
 
         $data = $this->getAttendanceData($pertemuan, $request->kelas_id);
 
-        $fileName = "absensi_{$request->nama_kelas}_{$request->pertemuan_title}.xlsx";
-        return Excel::download(new AttendanceMeetExport($data), $fileName);
+        $fileName = "absensi-{$request->nama_kelas}-{$request->pertemuan_title}.xlsx";
+        $reportInfo = [
+            'namaKelas' => $request->nama_kelas,
+            'pertemuanTitle' => $pertemuan->title,
+            'tanggal' => Carbon::parse($pertemuan->created_at)->translatedFormat('d F Y')
+        ];
+
+        return Excel::download(new AttendanceMeetExport($data, $reportInfo), $fileName);
     }
 
-    private function getClassAttendanceData($kelas_id, $tahun_ajaran)
+    private function getClassAttendanceData($kelas_id, $tahun_ajaran, $pertemuan_ids = [])
     {
         $result = [];
 
         foreach (['L', 'P'] as $gender) {
-            $pertemuanList = Pertemuan::where('tahun_ajaran', $tahun_ajaran)
-                ->where('gender', $gender)
-                ->orderBy('created_at', 'asc')
-                ->get();
+
+            $pertemuanQuery = Pertemuan::where('tahun_ajaran', $tahun_ajaran)
+            ->where('gender', $gender);
+
+            if (!empty($pertemuan_ids)) {
+                $pertemuanQuery->whereIn('id', $pertemuan_ids);
+            }
+
+           $pertemuanList = $pertemuanQuery->orderBy('created_at', 'asc')
+            ->select(
+                'id',
+                'tahun_ajaran',
+                'gender',
+                'title',
+                DB::raw("DATE_FORMAT(created_at, '%d/%m/%Y') as tanggal")
+            )
+            ->get();
 
             if ($pertemuanList->isEmpty()) {
                 $result[$gender] = [
@@ -297,11 +364,15 @@ class AttendanceController extends Controller
             'tahun_ajaran' => 'required|string',
             'nama_kelas_lengkap' => 'required|string',
             'nama_jurusan' => 'required|string',
+            'pertemuan_ids' => 'sometimes|array',
         ]);
+
+        $pertemuan_ids = $request->input('pertemuan_ids', []);
 
         $data = $this->getClassAttendanceData(
             $kelas->id,
-            $request->tahun_ajaran
+            $request->tahun_ajaran,
+            $pertemuan_ids 
         );
 
         $reportInfo = [
@@ -313,9 +384,10 @@ class AttendanceController extends Controller
         $pdf = PDF::loadView('exports.attendance-class-pdf', [
             'data' => $data,
             'reportInfo' => $reportInfo,
+            'logoPath' => 'images/logo-smk.png',
         ])->setPaper('a4', 'landscape');
 
-        $fileName = "rekap_absensi_{$request->nama_kelas_lengkap}.pdf";
+        $fileName = "absensi-{$request->nama_kelas_lengkap}-{$request->tahun_ajaran}.pdf";
         return $pdf->download($fileName);
     }
 
@@ -325,11 +397,15 @@ class AttendanceController extends Controller
             'tahun_ajaran' => 'required|string',
             'nama_kelas_lengkap' => 'required|string',
             'nama_jurusan' => 'required|string',
+            'pertemuan_ids' => 'sometimes|array',
         ]);
+
+        $pertemuan_ids = $request->input('pertemuan_ids', []);
 
         $data = $this->getClassAttendanceData(
             $kelas->id,
-            $request->tahun_ajaran
+            $request->tahun_ajaran,
+            $pertemuan_ids
         );
 
         $reportInfo = [
@@ -338,7 +414,7 @@ class AttendanceController extends Controller
             'tahun_ajaran' => $request->tahun_ajaran,
         ];
 
-        $fileName = "rekap_absensi_{$request->nama_kelas_lengkap}.xlsx";
+        $fileName = "absensi-{$request->nama_kelas_lengkap}-{$request->tahun_ajaran}.xlsx";
 
         return Excel::download(
             new AttendanceClassExport($data, $reportInfo),
@@ -346,16 +422,16 @@ class AttendanceController extends Controller
         );
     }
 
-    private function getYearAttendanceData($tahun_ajaran)
+    private function getYearAttendanceData($tahun_ajaran, $pertemuan_ids = [])
     {
         $classes = Kelas::whereHas('siswas', function (Builder $query) use ($tahun_ajaran) {
                         $query->whereHas('academicYear', function (Builder $q) use ($tahun_ajaran) {
                             $q->where('year', $tahun_ajaran);
                         });
                     })
-                    ->orderBy('nama_kelas') 
-                    ->orderBy('kelompok')
-                    ->get();
+            ->orderBy('nama_kelas') 
+            ->orderBy('kelompok')
+            ->get();
 
         if ($classes->isEmpty()) {
             return []; 
@@ -364,7 +440,7 @@ class AttendanceController extends Controller
         $yearData = [];
 
         foreach ($classes as $kelas) {
-            $classData = $this->getClassAttendanceData($kelas->id, $tahun_ajaran);
+            $classData = $this->getClassAttendanceData($kelas->id, $tahun_ajaran, $pertemuan_ids);
 
             if (
                 (!empty($classData['L']['siswa_data']) && !$classData['L']['siswa_data']->isEmpty()) ||
@@ -383,14 +459,16 @@ class AttendanceController extends Controller
              abort(400, 'Format tahun ajaran tidak valid.');
         }
 
-        $yearData = $this->getYearAttendanceData($tahun_ajaran);
+        $pertemuan_ids = $request->input('pertemuan_ids', []);
+
+        $yearData = $this->getYearAttendanceData($tahun_ajaran, $pertemuan_ids);
 
         $kelasInfoList = collect([]);
         if (!empty($yearData)) {
             $kelasInfoList = Kelas::with('jurusan')
-                                ->whereIn('id', array_keys($yearData))
-                                ->get()
-                                ->keyBy('id');
+                ->whereIn('id', array_keys($yearData))
+                ->get()
+                ->keyBy('id');
         }
 
 
@@ -398,9 +476,10 @@ class AttendanceController extends Controller
             'yearData' => $yearData,
             'tahunAjaran' => $tahun_ajaran,
             'kelasInfoList' => $kelasInfoList, 
+            'logoPath' => 'images/logo-smk.png',
         ])->setPaper('a4', 'landscape');
 
-        $fileName = "rekap_absensi_tahunan_{$tahun_ajaran}.pdf";
+        $fileName = "absensi-TA-{$tahun_ajaran}.pdf";
         return $pdf->download($fileName);
     }
 
@@ -410,17 +489,110 @@ class AttendanceController extends Controller
              abort(400, 'Format tahun ajaran tidak valid.');
          }
 
-        $yearData = $this->getYearAttendanceData($tahun_ajaran);
+        $pertemuan_ids = $request->input('pertemuan_ids', []);
+        $yearData = $this->getYearAttendanceData($tahun_ajaran, $pertemuan_ids);
 
         if (empty($yearData)) {
              return response()->json(['error' => 'Tidak ada data absensi ditemukan untuk tahun ajaran ' . $tahun_ajaran], 404);
         }
 
 
-        $fileName = "rekap_absensi_tahunan_{$tahun_ajaran}.xlsx";
+        $fileName = "absensi-TA-{$tahun_ajaran}.xlsx";
 
         return Excel::download(
             new AttendanceYearExport($yearData, $tahun_ajaran),
+            $fileName
+        );
+    }
+
+    public function exportYearReportAbsentPdf(Request $request, $tahun_ajaran)
+    {
+        if (!preg_match('/^\d{4}-\d{4}$/', $tahun_ajaran)) {
+            abort(400, 'Format tahun ajaran tidak valid.');
+        }
+
+        $pertemuan_ids = $request->input('pertemuan_ids', []);
+
+        $yearData = $this->getYearAttendanceData($tahun_ajaran, $pertemuan_ids);
+        $kelasInfoList = collect([]);
+
+        $absentYearData = [];
+        foreach ($yearData as $kelasId => $classData) {
+            $absentClassData = [];
+            foreach ($classData as $gender => $genderData) {
+                $absentSiswaData = collect($genderData['siswa_data'])->filter(function ($siswa) {
+                    return in_array('Alfa', $siswa['status']); 
+                });
+
+                if ($absentSiswaData->isNotEmpty()) {
+                    $absentClassData[$gender] = [
+                        'pertemuan_list' => $genderData['pertemuan_list'],
+                        'siswa_data'     => $absentSiswaData,
+                    ];
+                }
+            }
+            
+            if (!empty($absentClassData)) {
+                $absentYearData[$kelasId] = $absentClassData;
+            }
+        }
+
+        if (!empty($absentYearData)) {
+            $kelasInfoList = Kelas::with('jurusan')
+                ->whereIn('id', array_keys($absentYearData))
+                ->get()
+                ->keyBy('id');
+        }
+
+        $pdf = PDF::loadView('exports.attendance-year-absent-pdf', [
+            'yearData' => $absentYearData,
+            'tahunAjaran' => $tahun_ajaran,
+            'kelasInfoList' => $kelasInfoList,
+            'logoPath' => 'images/logo-smk.png',
+        ])->setPaper('a4', 'landscape');
+
+        $fileName = "absensi-TIDAK-HADIR-TA-{$tahun_ajaran}.pdf";
+        return $pdf->download($fileName);
+    }
+
+    public function exportYearReportAbsentExcel(Request $request, $tahun_ajaran)
+    {
+        if (!preg_match('/^\d{4}-\d{4}$/', $tahun_ajaran)) {
+            abort(400, 'Format tahun ajaran tidak valid.');
+        }
+
+        $pertemuan_ids = $request->input('pertemuan_ids', []);
+        $yearData = $this->getYearAttendanceData($tahun_ajaran, $pertemuan_ids);
+
+        $absentYearData = [];
+        foreach ($yearData as $kelasId => $classData) {
+            $absentClassData = [];
+            foreach ($classData as $gender => $genderData) {
+                
+                $absentSiswaData = collect($genderData['siswa_data'])->filter(function ($siswa) {
+                    return in_array('Alfa', $siswa['status']); 
+                });
+
+                if ($absentSiswaData->isNotEmpty()) {
+                    $absentClassData[$gender] = [
+                        'pertemuan_list' => $genderData['pertemuan_list'],
+                        'siswa_data'     => $absentSiswaData,
+                    ];
+                }
+            }
+            if (!empty($absentClassData)) {
+                $absentYearData[$kelasId] = $absentClassData;
+            }
+        }
+
+        if (empty($absentYearData)) {
+            return response()->json(['error' => 'Tidak ada data siswa yang tidak hadir untuk tahun ajaran ' . $tahun_ajaran], 404);
+        }
+
+        $fileName = "absensi-TIDAK-HADIR-TA-{$tahun_ajaran}.xlsx";
+
+        return Excel::download(
+            new AttendanceYearAbsentExport($absentYearData, $tahun_ajaran),
             $fileName
         );
     }

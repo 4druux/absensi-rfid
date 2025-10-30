@@ -59,17 +59,17 @@ const Header = ({ onMenuClick }) => {
             )}
 
             <header className="lg:py-3 lg:px-6 text-gray-700 sticky top-0 z-30">
-                <div className="flex items-center justify-between bg-white lg:border border-gray-300 rounded-lg lg:shadow-sm py-3 lg:px-4">
-                    <div className="flex items-center gap-1">
-                        {/* <img
-                        src="/images/logo-jurusan.png"
-                        alt="Logo"
-                        className="w-10 md:w-14 object-cover"
-                    /> */}
+                <div className="flex items-center justify-between bg-white lg:border border-gray-300 rounded-lg shadow-md lg:shadow-sm py-3 lg:px-4">
+                    <div className="flex items-center gap-1 pl-3 lg:pl-0">
+                        <div>
+                            <img
+                                src="/images/logo-smk.png"
+                                alt="Logo"
+                                className="w-10 md:w-12 object-cover"
+                            />
+                        </div>
 
-                        <div className="px-4 md:px-14">Logo</div>
-
-                        <hr className="w-px h-8 bg-gray-300" />
+                        <hr className="w-px h-8 bg-gray-300 ml-4" />
                         <button
                             onClick={onMenuClick}
                             className="p-2 rounded-full hover:bg-gray-100 focus:outline-none cursor-pointer"

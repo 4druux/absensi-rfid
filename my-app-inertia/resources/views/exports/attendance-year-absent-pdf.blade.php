@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rekap Absensi Tahun Ajaran {{ $tahunAjaran }}</title>
+    <title>Rekap Absensi (Tidak Hadir) - {{ $tahunAjaran }}</title>
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
@@ -140,11 +140,26 @@
             @endif
 
             <div class="header-text">
-                <h1>LAPORAN ABSENSI KESELURUHAN</h1>
+                <h1>LAPORAN REKAPITULASI (HANYA TIDAK HADIR)</h1>
                 <h2>SMK YAPIA PARUNG</h2>
                 <h2>Tahun Ajaran: {{ $tahunAjaran }}</h2>
             </div>
         </div>
+
+        <table class="legend-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>A</td>
+                    <td>Alfa</td>
+                </tr>
+            </tbody>
+        </table>
 
         @forelse ($yearData as $kelasId => $classData)
             @php
@@ -170,15 +185,17 @@
                 <h4>Siswa: <span style="font-weight:700">{{ $genderLabel }}</span></h4>
 
                 @if ($pertemuanList->isEmpty() || $siswaData->isEmpty())
-                    <p style="text-align:center; font-style:italic;">Tidak ada data absensi untuk {{ $genderLabel }} di
+                    <p style="text-align:center; font-style:italic;">Tidak ada data siswa yang tidak hadir untuk
+                        {{ $genderLabel }}
+                        di
                         kelas ini.</p>
                 @else
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 5%;">No</th>
-                                <th style="width: 30%;">Nama Siswa</th>
-                                <th style="width: 15%;">RFID</th>
+                                <th style="width: 1%;">No</th>
+                                <th style="width: 1%;">Nama Siswa</th>
+                                <th style="width: 1%;">RFID</th>
                                 @foreach ($pertemuanList as $pertemuan)
                                     <th>
                                         {{ $pertemuan->title }} <br>
@@ -196,12 +213,8 @@
                                     <td class="text-center">{{ $siswa['rfid'] ?? '-' }}</td>
                                     @foreach ($siswa['status'] as $status)
                                         <td class="text-center">
-                                            @if ($status === 'Hadir')
-                                                ✓
-                                            @elseif ($status === 'Alfa')
+                                            @if ($status === 'Alfa')
                                                 A
-                                            @else
-                                                {{ $status }}
                                             @endif
                                         </td>
                                     @endforeach
@@ -216,30 +229,13 @@
             @endif
 
         @empty
-            <p style="text-align:center; font-weight:bold; margin-top: 50px;">Tidak ada data absensi yang ditemukan
+            <p style="text-align:center; font-weight:bold; margin-top: 50px;">Tidak ada data siswa yang tidak hadir
+                ditemukan
                 untuk
                 tahun ajaran {{ $tahunAjaran }}.</p>
         @endforelse
-    </div>
 
-    <table class="legend-table">
-        <thead>
-            <tr>
-                <th>Status</th>
-                <th>Keterangan</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>✓</td>
-                <td>Hadir</td>
-            </tr>
-            <tr>
-                <td>A</td>
-                <td>Alfa</td>
-            </tr>
-        </tbody>
-    </table>
+    </div>
 
     <div class="footer">
         Laporan ini dibuat secara otomatis oleh Sistem Absensi SMK Yapia Parung

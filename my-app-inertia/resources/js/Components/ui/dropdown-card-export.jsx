@@ -10,13 +10,19 @@ const DropdownCardExport = ({
     onExportExcel,
     isDownloadingPdf,
     isDownloadingExcel,
+    onExportPdfAbsent,
+    onExportExcelAbsent,
+    isDownloadingPdfAbsent,
+    isDownloadingExcelAbsent,
 }) => {
+    const hasAbsentOptions = onExportPdfAbsent || onExportExcelAbsent;
+
     return (
         <AnimatePresence>
             {isOpen && (
                 <motion.div
                     ref={dropdownRef}
-                    className="absolute top-7 right-3 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-40"
+                    className="absolute top-7 right-3 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-40"
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
@@ -39,6 +45,36 @@ const DropdownCardExport = ({
                         <RiFileExcel2Line className="h-4 w-4" />
                         {isDownloadingExcel ? "Mengunduh..." : "Export Excel"}
                     </button>
+
+                    {hasAbsentOptions && (
+                        <>
+                            <div className="border-t border-gray-100 my-1"></div>
+                            {onExportPdfAbsent && (
+                                <button
+                                    onClick={onExportPdfAbsent}
+                                    disabled={isDownloadingPdfAbsent}
+                                    className="w-full flex items-center gap-2 text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                >
+                                    <FaRegFilePdf className="h-4 w-4 text-red-500" />
+                                    {isDownloadingPdfAbsent
+                                        ? "Mengunduh..."
+                                        : "Export PDF Tdk Hadir"}
+                                </button>
+                            )}
+                            {onExportExcelAbsent && (
+                                <button
+                                    onClick={onExportExcelAbsent}
+                                    disabled={isDownloadingExcelAbsent}
+                                    className="w-full flex items-center gap-2 text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                >
+                                    <RiFileExcel2Line className="h-4 w-4 text-red-500" />
+                                    {isDownloadingExcelAbsent
+                                        ? "Mengunduh..."
+                                        : "Export Excel Tdk Hadir"}
+                                </button>
+                            )}
+                        </>
+                    )}
                 </motion.div>
             )}
         </AnimatePresence>

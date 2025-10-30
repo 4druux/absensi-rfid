@@ -9,8 +9,8 @@ const PageContent = ({
     return (
         <div>
             <BreadcrumbNav items={breadcrumbItems} pageTitle={pageTitle} />
-            <div className={`pb-10 ${pageClassName}`}>
-                <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-3 md:p-4">
+            <div className={`pb-6 lg:pb-4 ${pageClassName}`}>
+                <div className="bg-white md:shadow-sm md:border border-gray-200 md:rounded-lg md:p-4">
                     {children}
                 </div>
             </div>

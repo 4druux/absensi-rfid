@@ -4,8 +4,9 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use App\Models\Kelas;
+use App\Exports\AttendanceClassAbsentSheet;
 
-class AttendanceYearExport implements WithMultipleSheets
+class AttendanceYearAbsentExport implements WithMultipleSheets
 {
     protected $yearData;
     protected $tahunAjaran;
@@ -34,7 +35,7 @@ class AttendanceYearExport implements WithMultipleSheets
             $sheetTitle = $namaKelasLengkap;
 
             if (!empty($classData['L']['siswa_data']) && !$classData['L']['siswa_data']->isEmpty()) {
-                $sheets[] = new AttendanceClassSheet(
+                $sheets[] = new AttendanceClassAbsentSheet(
                     $sheetTitle . ' (L)',
                     $classData['L']['pertemuan_list'],
                     $classData['L']['siswa_data'],
@@ -43,7 +44,7 @@ class AttendanceYearExport implements WithMultipleSheets
             }
 
             if (!empty($classData['P']['siswa_data']) && !$classData['P']['siswa_data']->isEmpty()) {
-                 $sheets[] = new AttendanceClassSheet(
+                 $sheets[] = new AttendanceClassAbsentSheet(
                     $sheetTitle . ' (P)',
                     $classData['P']['pertemuan_list'],
                     $classData['P']['siswa_data'],

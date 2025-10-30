@@ -1,9 +1,13 @@
 export default function Badge({ imageSrc, altText }) {
     return (
         <>
-            <h1 className="z-10 absolute top-5 left-10 text-xl text-indigo-600">
-                Smk Yapia Parung LOGO
-            </h1>
+            <div className="z-10 absolute top-5 left-10">
+                <img
+                    src="./images/logo-smk.png"
+                    alt="logo-smk"
+                    className="h-14 w-auto"
+                />
+            </div>
             <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 via-white to-white"></div>
 
             <div

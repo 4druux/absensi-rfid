@@ -5,14 +5,12 @@ import Button from "@/Components/ui/button";
 const ShowAkunTable = ({
     users,
     type,
-    role,
+
     onApprove,
     onReject,
     isProcessing,
     onOpenResetPasswordModal,
 }) => {
-    const isSiswa = role === "siswa";
-
     return (
         <div className="overflow-x-auto">
             <table className="w-full">
@@ -25,7 +23,7 @@ const ShowAkunTable = ({
                             Nama
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            {isSiswa ? "No Peserta" : "Email"}
+                            Email
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                             Role
@@ -48,7 +46,7 @@ const ShowAkunTable = ({
                                 {user.name}
                             </td>
                             <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                                {isSiswa ? user.no_peserta : user.email}
+                                {user.email}
                             </td>
                             <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 capitalize">
                                 {user.role}
