@@ -1,21 +1,23 @@
-import React from "react"; 
+import React, { useState, useEffect, useRef } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/Utils/api";
 import AttendanceHeader from "@/Components/home/attendance-header";
 import StatusCard from "@/Components/home/status-card";
 import DotLoader from "@/Components/ui/dot-loader";
 import { Volume2 } from "lucide-react";
+import "@/bootstrap";
 
 const MonitorPage = ({ identifier }) => {
     const {
         data: monitorData,
         error,
         isLoading,
+        mutate,
     } = useSWR(identifier ? `/api/monitor-data/${identifier}` : null, fetcher, {
-        refreshInterval: 2000, 
+        refreshInterval: 2000,
         onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
-            if (error.response?.status === 404) return; 
-            setTimeout(() => revalidate({ retryCount }), 5000); 
+            if (error.response?.status === 404) return;
+            setTimeout(() => revalidate({ retryCount }), 5000);
         },
     });
 
@@ -24,14 +26,66 @@ const MonitorPage = ({ identifier }) => {
         setIsAudioReady(true);
     };
 
+    const [realTimeStatus, setRealTimeStatus] = useState(null);
+    const statusTimerRef = useRef(null);
+
     const isSessionActive = monitorData?.isSessionActive || false;
     const attendanceCount = monitorData?.attendanceCount || 0;
-    const attendanceRecords = monitorData?.attendanceRecords || [];
-    const hookStatus = monitorData?.status || {
+
+    const initialStatus = monitorData?.status || {
         type: "waiting",
         title: "Menghubungkan...",
         detail: "Memuat status sesi...",
     };
+    const hookStatus = realTimeStatus || initialStatus;
+
+    useEffect(() => {
+        const resetStatus = () => {
+            clearTimeout(statusTimerRef.current);
+            statusTimerRef.current = setTimeout(() => {
+                setRealTimeStatus(null);
+            }, 3000);
+        };
+
+        const handleScan = (e) => {
+            if (isAudioReady) {
+                let soundFile = "/sounds/scan-beep.mp3";
+                if (e.type === "error" || e.type === "duplicate") {
+                    soundFile = "/sounds/scan-error.mp3";
+                }
+
+                const soundToPlay = new Audio(soundFile);
+                soundToPlay
+                    .play()
+                    .catch((err) =>
+                        console.error("Audio scan gagal diputar:", err)
+                    );
+            }
+
+            setRealTimeStatus({
+                type: e.type,
+                title: e.title,
+                detail: e.detail,
+            });
+            resetStatus();
+
+            if (e.type === "success") {
+                mutate();
+            }
+        };
+
+        window.Echo.channel("attendance-channel").listen(
+            "AttendanceScanned",
+            handleScan
+        );
+
+        return () => {
+            window.Echo.channel("attendance-channel").stopListening(
+                "AttendanceScanned"
+            );
+            clearTimeout(statusTimerRef.current);
+        };
+    }, [mutate, isAudioReady]);
 
     if (isLoading && !monitorData && !error) {
         return (

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
 import Button from "@/Components/ui/button";
 import { Loader2, Menu, Check } from "lucide-react";
+import { dropdownAnimation, useDropdown } from "@/Hooks/use-dropdown";
+import { AnimatePresence, motion } from "framer-motion";
 
 const ManualStatusDropdown = ({
     siswaId,
@@ -8,7 +9,7 @@ const ManualStatusDropdown = ({
     onManualAttendance,
     isToggling,
 }) => {
-    const [isOpen, setIsOpen] = useState(false);
+    const { isOpen, setIsOpen, dropdownRef } = useDropdown();
 
     const availableStatuses = [
         { label: "Hadir", value: "Hadir", variant: "primary" },
@@ -29,7 +30,7 @@ const ManualStatusDropdown = ({
     };
 
     return (
-        <div className="relative inline-block text-left">
+        <div className="relative inline-block text-left" ref={dropdownRef}>
             <Button
                 variant="outline"
                 size="sm"
@@ -46,23 +47,29 @@ const ManualStatusDropdown = ({
                 {isToggling === siswaId ? "Memproses..." : "Ubah Status"}
             </Button>
 
-            {isOpen && (
-                <div
-                    className="absolute z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none right-0 xl:left-0"
-                    role="menu"
-                    aria-orientation="vertical"
-                    aria-labelledby="menu-button"
-                >
-                    <div className="py-1" role="none">
-                        {availableStatuses.map((status) => (
-                            <button
-                                key={status.value}
-                                onClick={() => handleAction(status.value)}
-                                disabled={
-                                    isToggling === siswaId ||
-                                    currentStatus === status.value
-                                }
-                                className={`
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        className="absolute z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none right-0 xl:-left-10"
+                        role="menu"
+                        aria-orientation="vertical"
+                        aria-labelledby="menu-button"
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        variants={dropdownAnimation.variants}
+                        transition={dropdownAnimation.transition}
+                    >
+                        <div className="py-1" role="none">
+                            {availableStatuses.map((status) => (
+                                <button
+                                    key={status.value}
+                                    onClick={() => handleAction(status.value)}
+                                    disabled={
+                                        isToggling === siswaId ||
+                                        currentStatus === status.value
+                                    }
+                                    className={`
                                     ${
                                         currentStatus === status.value
                                             ? "bg-slate-100 font-semibold"
@@ -71,20 +78,21 @@ const ManualStatusDropdown = ({
                                     group flex w-full items-center px-4 py-2 text-sm text-left
                                     disabled:opacity-60 disabled:cursor-not-allowed
                                 `}
-                                role="menuitem"
-                            >
-                                {status.value === currentStatus && (
-                                    <Check className="h-4 w-4 mr-2 text-emerald-500" />
-                                )}
-                                {status.value !== currentStatus && (
-                                    <span className="h-4 w-4 mr-2" />
-                                )}
-                                {status.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
+                                    role="menuitem"
+                                >
+                                    {status.value === currentStatus && (
+                                        <Check className="h-4 w-4 mr-2 text-emerald-500" />
+                                    )}
+                                    {status.value !== currentStatus && (
+                                        <span className="h-4 w-4 mr-2" />
+                                    )}
+                                    {status.label}
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

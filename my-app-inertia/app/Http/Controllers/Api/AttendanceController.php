@@ -111,7 +111,7 @@ class AttendanceController extends Controller
 
         if (!$matchingPertemuan) {
             $kelasInfo = $siswa->kelas ? $siswa->kelas->nama_kelas . ' ' . $siswa->kelas->kelompok : 'Kelas Tidak Diketahui';
-            $message = "{$siswa->nama} - {$kelasInfo} Tidak ada sesi absensi yang sesuai untuk kelas/gender siswa ini.";
+            $message = "{$siswa->nama} - {$kelasInfo} Tidak ada sesi absensi yang sesuai.";
             AttendanceScanned::dispatch('error', 'Absen Gagal!', $message);
             return response()->json(['message' => $message], 403);
         }
