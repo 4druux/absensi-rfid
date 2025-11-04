@@ -47,10 +47,7 @@ const AccountSettingsPage = () => {
         setErrors({});
 
         try {
-            const response = await axios.put(
-                "/api/account/settings", 
-                formData
-            );
+            const response = await axios.put("/api/account/settings", formData);
             toast.success(
                 response.data.message || "Pengaturan akun berhasil diperbarui."
             );

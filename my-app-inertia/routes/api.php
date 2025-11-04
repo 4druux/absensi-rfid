@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DataSiswa\DataSiswaController;
 use App\Http\Controllers\Api\DataSiswa\JurusanController;
 use App\Http\Controllers\Api\DataSiswa\KelasController;
 use App\Http\Controllers\Api\PertemuanController;
+use App\Http\Controllers\Api\TitikAbsenController;
 use App\Http\Controllers\Api\UserManagementController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
@@ -18,8 +19,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Absensi
 Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
-Route::get('/attendance/today', [AttendanceController::class, 'getTodaysAttendance']);
-Route::get('/pertemuan-active-status', [PertemuanController::class, 'getActiveStatus']);
+Route::get('/monitor-data/{identifier}', [TitikAbsenController::class, 'getMonitorData']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Jurusan
@@ -60,12 +60,24 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::apiResource('pertemuan', PertemuanController::class);
-    Route::post('/pertemuan/{pertemuan}/activate', [PertemuanController::class, 'setActive']);
-    Route::post('/pertemuan/{pertemuan}/deactivate', [PertemuanController::class, 'setInactive']);
+    Route::post('/pertemuan/bulk-store', [PertemuanController::class, 'storeBulk']);
     Route::get('/pertemuan-by-year/{tahun_ajaran}', [PertemuanController::class, 'getPertemuanByYear']);
+    Route::get('/pertemuan-by-class/{kelas}', [PertemuanController::class, 'getPertemuanByKelas']);
 
     Route::get('/attendance/show/{pertemuan}', [AttendanceController::class, 'getAttendanceByPertemuan']);
     Route::post('/attendance/manual', [AttendanceController::class, 'manualAttendance']);
+
+    Route::get('/dashboard-data', [AttendanceController::class, 'getDashboardData']);
+
+    // Titik Absen
+    Route::controller(TitikAbsenController::class)->prefix('titik-absen')->group(function () {
+        Route::get('/', 'index');
+        Route::post('/', 'store');
+        Route::delete('/{titikAbsen}', 'destroy');
+        Route::get('/available-pertemuan', 'getAvailablePertemuan');
+        Route::put('/{titikAbsen}/assign', 'assignPertemuan');
+        Route::delete('/{titikAbsen}/assign/{pertemuan}', 'unassignPertemuan');
+    });
 
     // Manajemen Akun
     Route::controller(UserManagementController::class)->prefix('users')->group(function () {

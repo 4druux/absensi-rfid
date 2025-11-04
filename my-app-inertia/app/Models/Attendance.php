@@ -9,7 +9,7 @@ class Attendance extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['siswa_id', 'waktu_absen', 'pertemuan_id'];
+    protected $fillable = ['siswa_id', 'waktu_absen', 'pertemuan_id', 'status'];
 
     public $timestamps = false;
 

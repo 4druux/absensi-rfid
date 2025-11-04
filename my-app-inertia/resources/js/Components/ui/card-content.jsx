@@ -1,12 +1,6 @@
 import { Link } from "@inertiajs/react";
 import { clsx } from "clsx";
-import {
-    ArrowUpRight,
-    PenLine,
-    Trash2,
-    PlayCircle,
-    XCircle,
-} from "lucide-react";
+import { ArrowUpRight, PenLine, Trash2 } from "lucide-react";
 
 const CardContent = ({
     icon,
@@ -17,7 +11,6 @@ const CardContent = ({
     className,
     onDelete,
     onEdit,
-    onToggleActive,
     isActive,
     moreActionsButton,
     ...props
@@ -52,12 +45,6 @@ const CardContent = ({
         e.preventDefault();
         e.stopPropagation();
         onEdit();
-    };
-
-    const handleToggleActiveClick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onToggleActive();
     };
 
     return (
@@ -113,27 +100,6 @@ const CardContent = ({
                 </div>
 
                 <div className="mt-auto flex justify-end items-end gap-2 pr-4 pb-4">
-                    {onToggleActive && (
-                        <div
-                            onClick={handleToggleActiveClick}
-                            title={
-                                isActive ? "Nonaktifkan Sesi" : "Aktifkan Sesi"
-                            }
-                            className={clsx(
-                                "p-2 rounded-full border-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity cursor-pointer",
-                                isActive
-                                    ? "bg-red-100 border-red-500 md:bg-gray-100 md:border-gray-200 md:group-hover:bg-red-100 group-hover:border-red-500"
-                                    : "bg-emerald-100 border-emerald-500 md:bg-gray-100 md:border-gray-200 md:group-hover:bg-emerald-100 group-hover:border-emerald-500"
-                            )}
-                        >
-                            {isActive ? (
-                                <XCircle className="w-5 h-5 text-red-600" />
-                            ) : (
-                                <PlayCircle className="w-5 h-5 text-emerald-600" />
-                            )}
-                        </div>
-                    )}
-
                     {onEdit && (
                         <div
                             onClick={handleEditClick}

@@ -14,7 +14,8 @@ return new class extends Migration
             $table->foreignId('pertemuan_id')
                   ->constrained('pertemuans')
                   ->onDelete('cascade');
-            $table->timestamp('waktu_absen');
+            $table->timestamp('waktu_absen')->nullable();
+            $table->string('status')->default('Hadir');
             $table->unique(['siswa_id', 'pertemuan_id']);
         });
     }

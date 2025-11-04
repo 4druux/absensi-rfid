@@ -175,13 +175,30 @@
                                 <td class="text-center">{{ $siswa['rfid'] ?? '-' }}</td>
                                 @foreach ($siswa['status'] as $status)
                                     <td class="text-center">
-                                        @if ($status === 'Hadir')
-                                            ✓
-                                        @elseif ($status === 'Alfa')
-                                            A
-                                        @else
-                                            {{ $status }}
-                                        @endif
+                                        @switch($status)
+                                            @case('Hadir')
+                                                ✓
+                                            @break
+
+                                            @case('Telat')
+                                                T
+                                            @break
+
+                                            @case('Sakit')
+                                                S
+                                            @break
+
+                                            @case('Izin')
+                                                I
+                                            @break
+
+                                            @case('Bolos')
+                                                B
+                                            @break
+
+                                            @default
+                                                A
+                                        @endswitch
                                     </td>
                                 @endforeach
                             </tr>
@@ -207,6 +224,22 @@
             <tr>
                 <td>✓</td>
                 <td>Hadir</td>
+            </tr>
+            <tr>
+                <td>T</td>
+                <td>Telat</td>
+            </tr>
+            <tr>
+                <td>S</td>
+                <td>Sakit</td>
+            </tr>
+            <tr>
+                <td>I</td>
+                <td>Izin</td>
+            </tr>
+            <tr>
+                <td>B</td>
+                <td>Bolos</td>
             </tr>
             <tr>
                 <td>A</td>

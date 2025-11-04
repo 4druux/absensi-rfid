@@ -5,20 +5,11 @@ import "@/bootstrap";
 
 export const useAttendance = () => {
     const {
-        data: initialRecords,
+        data: dashboardData,
         error: swrError,
         mutate,
-        isLoading: recordsLoading,
-    } = useSWR("/api/attendance/today", fetcher, {
-        revalidateOnFocus: true,
-        revalidateOnReconnect: true,
-    });
-
-    const {
-        data: activeStatusData,
-        error: statusError,
-        isLoading: statusLoading,
-    } = useSWR("/api/pertemuan-active-status", fetcher, {
+        isLoading: dataLoading,
+    } = useSWR("/api/dashboard-data", fetcher, {
         revalidateOnFocus: true,
         revalidateOnReconnect: true,
     });
@@ -34,9 +25,16 @@ export const useAttendance = () => {
         return localStorage.getItem("audioActivated") === "true";
     });
 
-    const attendanceRecords = initialRecords || [];
-    const attendanceCount = attendanceRecords.length;
-    const isSessionActive = !!activeStatusData?.is_active && !statusLoading;
+    const attendanceRecords = dashboardData?.attendanceRecords || [];
+    const attendanceCount = dashboardData?.attendanceCount || 0;
+    const isSessionActive = !!dashboardData?.isSessionActive && !dataLoading;
+
+    useEffect(() => {
+        if (dashboardData?.status) {
+            setStatus(dashboardData.status);
+            resetStatus();
+        }
+    }, [dashboardData]);
 
     const resetStatus = () => {
         clearTimeout(statusTimerRef.current);
@@ -115,8 +113,8 @@ export const useAttendance = () => {
         attendanceRecords,
         attendanceCount,
         isSessionActive,
-        isLoading: recordsLoading || statusLoading,
-        error: swrError || statusError,
+        isLoading: dataLoading,
+        error: swrError,
         isAudioReady,
         initAudio,
     };

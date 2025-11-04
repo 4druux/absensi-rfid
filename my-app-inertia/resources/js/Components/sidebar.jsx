@@ -5,6 +5,7 @@ import {
     HomeIcon,
     UserCog,
     ClipboardCheck,
+    RadioTower,
 } from "lucide-react";
 import { Link } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -57,6 +58,14 @@ const Sidebar = ({ isOpen }) => {
             icon: UserCog,
             description: "Kelola akun pengguna",
             href: "/manajemen-akun",
+            canView: auth.user && hasAccess("superadmin", "admin"),
+        },
+        {
+            id: "titik-absen",
+            label: "Manajemen Titik Absen",
+            icon: RadioTower,
+            description: "Kelola pintu dan sesi",
+            href: "/manajemen-titik-absen",
             canView: auth.user && hasAccess("superadmin", "admin"),
         },
         {

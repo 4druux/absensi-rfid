@@ -21,12 +21,16 @@ const useShowAttendance = (pertemuan_id, kelas_id) => {
 
     const [isToggling, setIsToggling] = useState(null);
 
-    const toggleAttendance = async (siswa_id) => {
+    const manualAttendance = async (siswa_id, status = "Hadir") => {
         if (!pertemuan_id) return;
         setIsToggling(siswa_id);
 
         try {
-            const result = await manualAttendanceToggle(siswa_id, pertemuan_id);
+            const result = await manualAttendanceToggle(
+                siswa_id,
+                pertemuan_id,
+                status
+            );
 
             toast.success(result.message || "Status absensi berhasil diubah!");
 
@@ -38,7 +42,7 @@ const useShowAttendance = (pertemuan_id, kelas_id) => {
                 "Gagal mengubah status absensi.";
 
             toast.error(message);
-            console.error("Gagal toggle absensi:", err);
+            console.error("Gagal mengubah absensi:", err);
         } finally {
             setIsToggling(null);
         }
@@ -50,7 +54,7 @@ const useShowAttendance = (pertemuan_id, kelas_id) => {
         error,
         mutate,
         isToggling,
-        toggleAttendance,
+        manualAttendance,
     };
 };
 

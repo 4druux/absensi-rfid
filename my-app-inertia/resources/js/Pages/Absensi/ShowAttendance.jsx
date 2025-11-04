@@ -3,13 +3,7 @@ import HeaderContent from "@/Components/ui/header-content";
 import DataNotFound from "@/Components/ui/data-not-found";
 import DotLoader from "@/Components/ui/dot-loader";
 import Button from "@/Components/ui/button";
-import {
-    LucideGraduationCap,
-    ArrowLeft,
-    List,
-    XCircle,
-    CheckCircle2,
-} from "lucide-react";
+import { ArrowLeft, List, Users, School, BookOpen } from "lucide-react";
 import useShowAttendance from "@/Hooks/use-show-attendance";
 import AttendanceTable from "@/Components/absensi/attendance-table";
 import useSWR from "swr";
@@ -27,7 +21,7 @@ const ShowAttendance = ({
     nama_kelas,
     nama_jurusan,
 }) => {
-    const { attendanceData, isLoading, error, isToggling, toggleAttendance } =
+    const { attendanceData, isLoading, error, isToggling, manualAttendance } =
         useShowAttendance(pertemuan_id, kelas_id);
 
     const { data: pertemuanDetail, isLoading: isLoadingPertemuan } = useSWR(
@@ -76,23 +70,15 @@ const ShowAttendance = ({
         },
     ];
 
-    const hadirCount = attendanceData.filter(
-        (s) => s.status === "Hadir"
-    ).length;
-    const alfaCount = attendanceData.length - hadirCount;
+    const totalStudents = attendanceData.length;
 
     const studentDetails = [
-        { icon: LucideGraduationCap, label: nama_kelas },
-        { icon: LucideGraduationCap, label: nama_jurusan },
+        { icon: School, label: nama_kelas },
+        { icon: BookOpen, label: nama_jurusan },
+
         {
-            icon: CheckCircle2,
-            label: `${hadirCount} Hadir`,
-            className: "text-emerald-600",
-        },
-        {
-            icon: XCircle,
-            label: `${alfaCount} Alfa`,
-            className: "text-red-600",
+            icon: Users,
+            label: `${totalStudents} Siswa`,
         },
     ];
 
@@ -175,15 +161,14 @@ const ShowAttendance = ({
                     <div className="hidden xl:block">
                         <AttendanceTable
                             records={attendanceData}
-                            onToggle={toggleAttendance}
+                            onManualAttendance={manualAttendance}
                             isToggling={isToggling}
                         />
                     </div>
-
                     <div className="xl:hidden">
                         <AttendanceCard
                             records={attendanceData}
-                            onToggle={toggleAttendance}
+                            onManualAttendance={manualAttendance}
                             isToggling={isToggling}
                         />
                     </div>

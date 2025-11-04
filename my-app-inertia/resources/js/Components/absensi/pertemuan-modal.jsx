@@ -4,8 +4,6 @@ import { Loader2, Save, X } from "lucide-react";
 import Button from "@/Components/ui/button";
 import InputField from "../common/input-field";
 
-
-
 const PertemuanModal = ({
     isOpen,
     onClose,
@@ -13,8 +11,12 @@ const PertemuanModal = ({
     selectedPertemuan,
     tahun_ajaran,
     gender,
+    kelas_id,
 }) => {
-    const [formData, setFormData] = useState({ title: "" });
+    const [formData, setFormData] = useState({
+        title: "",
+        tanggal_pertemuan: "",
+    });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -23,9 +25,13 @@ const PertemuanModal = ({
     useEffect(() => {
         if (isOpen) {
             if (isEditing) {
-                setFormData({ title: selectedPertemuan.title || "" });
+                setFormData({
+                    title: selectedPertemuan.title || "",
+                    tanggal_pertemuan:
+                        selectedPertemuan.tanggal_pertemuan || "",
+                });
             } else {
-                setFormData({ title: "" });
+                setFormData({ title: "", tanggal_pertemuan: "" });
             }
             setErrors({});
         }
@@ -50,7 +56,7 @@ const PertemuanModal = ({
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e, scope = "this_class") => {
         e.preventDefault();
         setIsSubmitting(true);
         setErrors({});
@@ -66,16 +72,25 @@ const PertemuanModal = ({
             return;
         }
 
-        const dataToSave = isEditing
-            ? { title: formData.title }
-            : {
-                  title: formData.title,
-                  tahun_ajaran: tahun_ajaran,
-                  gender: gender,
-              };
+        let dataToSave;
+        if (isEditing) {
+            dataToSave = {
+                title: formData.title,
+                tanggal_pertemuan: formData.tanggal_pertemuan,
+            };
+        } else {
+            dataToSave = {
+                title: formData.title,
+                tahun_ajaran: tahun_ajaran,
+                gender: gender,
+                tanggal_pertemuan: formData.tanggal_pertemuan,
+                kelas_id: kelas_id,
+                scope: scope,
+            };
+        }
 
         try {
-            await onSave(dataToSave, selectedPertemuan?.id);
+            await onSave(dataToSave, selectedPertemuan?.id, scope);
         } catch (err) {
             const serverErrors = err?.response?.data?.errors;
             if (serverErrors) {
@@ -127,44 +142,106 @@ const PertemuanModal = ({
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex flex-col space-y-4 p-4 md:space-y-6 md:p-6">
+                            <div className="flex flex-col p-4 md:p-6">
+                                <div className="mb-4 md:mb-6">
+                                    <InputField
+                                        id="title"
+                                        name="title"
+                                        label="Judul Pertemuan"
+                                        value={formData.title}
+                                        onChange={handleChange}
+                                        error={errors?.title?.[0]}
+                                        disabled={isSubmitting}
+                                        required
+                                    />
+                                </div>
+
                                 <InputField
-                                    id="title"
-                                    name="title"
-                                    label="Judul Pertemuan"
-                                    value={formData.title}
+                                    id="tanggal_pertemuan"
+                                    name="tanggal_pertemuan"
+                                    label="Tanggal Pertemuan"
+                                    type="date"
+                                    value={formData.tanggal_pertemuan}
                                     onChange={handleChange}
-                                    error={errors?.title?.[0]}
+                                    error={errors?.tanggal_pertemuan?.[0]}
                                     disabled={isSubmitting}
-                                    required
                                 />
+                                <p className="mt-2 text-xs text-gray-500 px-1">
+                                    Jika dikosongkan, tanggal hari ini akan
+                                    digunakan.
+                                </p>
 
                                 <div className="flex justify-end gap-2 pt-4">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={onClose}
-                                        disabled={isSubmitting}
-                                        iconLeft={<X className="h-4 w-4" />}
-                                    >
-                                        Batal
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        variant="primary"
-                                        disabled={isSubmitting}
-                                        iconLeft={
-                                            isSubmitting ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                            ) : (
-                                                <Save className="h-4 w-4" />
-                                            )
-                                        }
-                                    >
-                                        {isSubmitting
-                                            ? "Menyimpan..."
-                                            : "Simpan"}
-                                    </Button>
+                                    {isEditing ? (
+                                        <>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={onClose}
+                                                disabled={isSubmitting}
+                                                iconLeft={
+                                                    <X className="h-4 w-4" />
+                                                }
+                                            >
+                                                Batal
+                                            </Button>
+
+                                            <Button
+                                                type="submit"
+                                                variant="primary"
+                                                disabled={isSubmitting}
+                                                iconLeft={
+                                                    isSubmitting ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Save className="h-4 w-4" />
+                                                    )
+                                                }
+                                            >
+                                                {isSubmitting
+                                                    ? "Menyimpan..."
+                                                    : "Simpan Perubahan"}
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Button
+                                                type="submit"
+                                                variant="outline"
+                                                disabled={isSubmitting}
+                                                iconLeft={
+                                                    isSubmitting ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Save className="h-4 w-4" />
+                                                    )
+                                                }
+                                            >
+                                                {isSubmitting
+                                                    ? "Menyimpan..."
+                                                    : "Simpan"}
+                                            </Button>
+
+                                            <Button
+                                                type="button"
+                                                variant="primary"
+                                                onClick={(e) =>
+                                                    handleSubmit(
+                                                        e,
+                                                        "all_classes"
+                                                    )
+                                                }
+                                                disabled={isSubmitting}
+                                                iconLeft={
+                                                    <Save className="h-4 w-4" />
+                                                }
+                                            >
+                                                {isSubmitting
+                                                    ? "Menyimpan..."
+                                                    : "Simpan Semua"}
+                                            </Button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </form>

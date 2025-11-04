@@ -82,6 +82,8 @@ class AttendanceClassAbsentSheet implements
         foreach ($row['status'] as $status) {
             if ($status === 'Alfa') {
                 $rowData[] = 'A';
+            } elseif ($status === 'Bolos') {
+                $rowData[] = 'B';
             } else {
                 $rowData[] = '';
             }
@@ -102,7 +104,7 @@ class AttendanceClassAbsentSheet implements
                 $sheet = $event->sheet->getDelegate();
 
                 $sheet->mergeCells('A1:' . $this->lastColumn . '1');
-                $sheet->setCellValue('A1', 'LAPORAN ABSENSI (HANYA TIDAK HADIR)');
+                $sheet->setCellValue('A1', 'LAPORAN ABSENSI TIDAK HADIR');
 
                 $sheet->mergeCells('A2:' . $this->lastColumn . '2');
                 $sheet->setCellValue('A2', 'SMK YAPIA PARUNG');

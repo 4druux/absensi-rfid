@@ -14,6 +14,7 @@ use App\Exports\AttendanceMeetExport;
 use App\Exports\AttendanceClassExport;
 use App\Exports\AttendanceYearAbsentExport;
 use App\Exports\AttendanceYearExport;
+use App\Models\TitikAbsen;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,15 +22,71 @@ use Illuminate\Support\Facades\DB;
 
 class AttendanceController extends Controller
 {
+    public function getDashboardData()
+    {
+        $activePertemuanIds = DB::table('pertemuan_titik_absen')->pluck('pertemuan_id')->unique();
+
+        $isSessionActive = $activePertemuanIds->isNotEmpty();
+        $records = collect([]);
+        $status = [
+            'type' => 'waiting',
+            'title' => 'Menunggu Kartu...',
+            'detail' => null,
+        ];
+
+        if ($isSessionActive) {
+            $attendances = Attendance::whereIn('pertemuan_id', $activePertemuanIds)
+                ->with(['siswa', 'siswa.kelas'])
+                ->orderBy('waktu_absen', 'desc')
+                ->get();
+
+            $records = $attendances->map(function ($att) {
+                return [
+                    'id' => $att->id,
+                    'nama' => $att->siswa ? $att->siswa->nama : 'Siswa Dihapus',
+                    'kelas' => $att->siswa && $att->siswa->kelas ? $att->siswa->kelas->nama_kelas . ' ' . $att->siswa->kelas->kelompok : 'N/A',
+                    'waktu' => Carbon::parse($att->waktu_absen)->format('H:i:s')
+                ];
+            });
+
+            $lastRecord = $records->first();
+            if ($lastRecord) {
+                $status = [
+                    'type' => 'success',
+                    'title' => 'Absen Berhasil!',
+                    'detail' => $lastRecord['nama'] . ' - ' . $lastRecord['kelas']
+                ];
+            }
+        }
+
+        return response()->json([
+            'isSessionActive' => $isSessionActive,
+            'attendanceCount' => $records->count(),
+            'attendanceRecords' => $records,
+            'status' => $status
+        ]);
+    }
+
     public function scan(Request $request)
     {
         $request->validate(['rfid' => 'required|string']);
+        
+        $apiKey = $request->bearerToken();
+        if (!$apiKey) {
+            return response()->json(['message' => 'API Key tidak ditemukan.'], 401);
+        }
 
-        $activePertemuans = Pertemuan::where('is_active', true)->get();
+        $titikAbsen = TitikAbsen::where('api_key', $apiKey)->first();
+
+        if (!$titikAbsen) {
+            return response()->json(['message' => 'API Key tidak valid.'], 401);
+        }
+
+        $activePertemuans = $titikAbsen->pertemuanAktif;
 
         if ($activePertemuans->isEmpty()) {
-            AttendanceScanned::dispatch('error', 'Absen Gagal!', 'Tidak ada sesi absensi yang aktif.');
-            return response()->json(['message' => 'Tidak ada sesi absensi yang aktif.'], 404);
+            AttendanceScanned::dispatch('error', 'Absen Gagal!', 'Titik absen ini tidak memiliki sesi aktif.');
+            return response()->json(['message' => 'Tidak ada sesi absensi yang aktif untuk titik ini.'], 404);
         }
 
         $siswa = Siswa::where('rfid', $request->rfid)
@@ -41,19 +98,20 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'Kartu tidak terdaftar.'], 404);
         }
 
-        if (!$siswa->academicYear || !$siswa->jenis_kelamin) {
-             AttendanceScanned::dispatch('error', 'Absen Gagal!', 'Data siswa tidak lengkap (T.A/ JK).');
+        if (!$siswa->academicYear || !$siswa->jenis_kelamin || !$siswa->kelas_id) {
+             AttendanceScanned::dispatch('error', 'Absen Gagal!', 'Data siswa tidak lengkap (T.A/ JK/ Kelas).');
              return response()->json(['message' => 'Data siswa tidak lengkap.'], 400);
         }
 
-        $matchingPertemuan = $activePertemuans->first(function ($pertemuan) use ($siswa) {
-            return $pertemuan->tahun_ajaran == $siswa->academicYear->year
-                   && $pertemuan->gender == $siswa->jenis_kelamin;
-        });
+        $matchingPertemuan = $activePertemuans
+            ->where('tahun_ajaran', $siswa->academicYear->year)
+            ->where('gender', $siswa->jenis_kelamin)
+            ->where('kelas_id', $siswa->kelas_id)
+            ->first();
 
         if (!$matchingPertemuan) {
             $kelasInfo = $siswa->kelas ? $siswa->kelas->nama_kelas . ' ' . $siswa->kelas->kelompok : 'Kelas Tidak Diketahui';
-            $message = "{$siswa->nama} - {$kelasInfo} Tidak ada sesi absensi yang sesuai.";
+            $message = "{$siswa->nama} - {$kelasInfo} Tidak ada sesi absensi yang sesuai untuk kelas/gender siswa ini.";
             AttendanceScanned::dispatch('error', 'Absen Gagal!', $message);
             return response()->json(['message' => $message], 403);
         }
@@ -64,7 +122,7 @@ class AttendanceController extends Controller
 
         if ($alreadyAttended) {
             $kelasInfo = $siswa->kelas ? $siswa->kelas->nama_kelas . ' ' . $siswa->kelas->kelompok : 'Kelas Tidak Diketahui';
-            $message = "{$siswa->nama} - {$kelasInfo} sudah absen untuk pertemuan ini.";
+            $message = "{$siswa->nama} - {$kelasInfo} sudah absen untuk sesi ini.";
             AttendanceScanned::dispatch('duplicate', 'Absen Gagal!', $message);
             return response()->json(['message' => $message], 409);
         }
@@ -80,7 +138,7 @@ class AttendanceController extends Controller
         $record = [
             'id' => $attendance->id,
             'nama' => $siswa->nama,
-            'kelas' => $siswa->kelas ? $siswa->kelas->nama_kelas . ' ' . $siswa->kelas->kelompok : 'N/A',
+            'kelas' => $kelasInfo,
             'waktu' => Carbon::parse($attendance->waktu_absen)->format('H:i:s')
         ];
 
@@ -90,31 +148,6 @@ class AttendanceController extends Controller
             'message' => 'Absen Berhasil!',
             'record' => $record
         ], 201);
-    }
-
-    public function getTodaysAttendance()
-    {
-        $activePertemuanIds = Pertemuan::where('is_active', true)->pluck('id');
-
-        if ($activePertemuanIds->isEmpty()) {
-            return response()->json([]);
-        }
-
-        $attendances = Attendance::with(['siswa', 'siswa.kelas'])
-            ->whereIn('pertemuan_id', $activePertemuanIds)
-            ->orderBy('waktu_absen', 'asc')
-            ->get();
-
-        $records = $attendances->map(function ($att) {
-            return [
-                'id' => $att->id,
-                'nama' => $att->siswa ? $att->siswa->nama : 'Siswa Dihapus',
-                'kelas' => $att->siswa && $att->siswa->kelas ? $att->siswa->kelas->nama_kelas . ' ' . $att->siswa->kelas->kelompok : 'N/A',
-                'waktu' => Carbon::parse($att->waktu_absen)->format('H:i:s')
-            ];
-        });
-
-        return response()->json($records);
     }
 
     private function getAttendanceData(Pertemuan $pertemuan, $kelasId)
@@ -129,7 +162,7 @@ class AttendanceController extends Controller
 
         $attendanceRecords = Attendance::where('pertemuan_id', $pertemuan->id)
             ->whereIn('siswa_id', $allRelevantSiswa->pluck('id'))
-            ->get()
+            ->get(['siswa_id', 'waktu_absen', 'status'])
             ->keyBy('siswa_id');
 
         $combinedData = $allRelevantSiswa->map(function ($siswa) use (
@@ -144,9 +177,9 @@ class AttendanceController extends Controller
                     'nama' => $siswa->nama,
                     'rfid' => $siswa->rfid,
                     'jenis_kelamin' => $siswa->jenis_kelamin,
-                    'status' => 'Hadir',
+                    'status' => $attendance->status, 
                     'tanggal_absen' => $waktu->translatedFormat('d-m-Y'),
-                    'waktu_absen' => $waktu->translatedFormat('H:i:s'),
+                    'waktu_absen' => $attendance->status !== 'Alfa' ? $waktu->translatedFormat('H:i:s') : null,
                 ];
             } else {
                 return [
@@ -181,40 +214,63 @@ class AttendanceController extends Controller
         $request->validate([
             'siswa_id' => 'required|exists:siswas,id',
             'pertemuan_id' => 'required|exists:pertemuans,id',
+            'status' => 'required|string|in:Hadir,Telat,Sakit,Izin,Bolos,Alfa', 
         ]);
 
         $siswaId = $request->siswa_id;
         $pertemuanId = $request->pertemuan_id;
+        $newStatus = $request->status;
 
         $attendance = Attendance::where('siswa_id', $siswaId)
             ->where('pertemuan_id', $pertemuanId)
             ->first();
 
-        if ($attendance) {
-            $attendance->delete();
-            return response()->json(['status' => 'deleted', 'message' => 'Absensi dibatalkan.']);
-        } else {
-            $pertemuan = Pertemuan::find($pertemuanId);
-            $siswa = Siswa::with('academicYear')->find($siswaId);
-
-            if (
-                !$siswa ||
-                !$siswa->academicYear ||
-                $siswa->academicYear->year != $pertemuan->tahun_ajaran ||
-                $siswa->jenis_kelamin != $pertemuan->gender
-            ) {
-                return response()->json(['message' => 'Siswa tidak sesuai dengan kriteria pertemuan ini.'], 422);
+        if ($newStatus === 'Alfa') {
+            if ($attendance) {
+                $attendance->delete();
+                return response()->json(['status' => 'deleted', 'message' => 'Absensi dibatalkan, status menjadi Alfa.']);
             }
+            return response()->json(['status' => 'ignored', 'message' => 'Status sudah Alfa.']);
+        }
+        
 
+        $pertemuan = Pertemuan::find($pertemuanId);
+        $siswa = Siswa::with('academicYear')->find($siswaId);
+
+        if (
+            !$siswa ||
+            !$siswa->academicYear ||
+            $siswa->academicYear->year != $pertemuan->tahun_ajaran ||
+            $siswa->jenis_kelamin != $pertemuan->gender
+        ) {
+            return response()->json(['message' => 'Siswa tidak sesuai dengan kriteria pertemuan ini.'], 422);
+        }
+
+        $waktuAbsen = now();
+
+        if ($attendance) {
+            $attendance->update([
+                'status' => $newStatus,
+                'waktu_absen' => $waktuAbsen,
+            ]);
+            
+            return response()->json([
+                'status' => 'updated', 
+                'message' => "Siswa ditandai {$newStatus}.",
+                'record' => $attendance,
+            ]);
+
+        } else {
             $newAttendance = Attendance::create([
                 'siswa_id' => $siswaId,
                 'pertemuan_id' => $pertemuanId,
-                'waktu_absen' => now(),
+                'waktu_absen' => $waktuAbsen, 
+                'status' => $newStatus,
             ]);
 
             return response()->json([
                 'status' => 'created',
-                'message' => 'Siswa ditandai hadir.',
+                'message' => "Siswa ditandai {$newStatus}.",
                 'record' => $newAttendance,
             ], 201);
         }
@@ -236,8 +292,12 @@ class AttendanceController extends Controller
             'pertemuanTitle' => $request->pertemuan_title,
             'nama_kelas' => $request->nama_kelas,
             'nama_jurusan' => $request->nama_jurusan,
-            'tanggal' => Carbon::parse($pertemuan->created_at)->translatedFormat('d F Y'),
+            'tanggal' => Carbon::parse($pertemuan->tanggal_pertemuan ?? $pertemuan->created_at)->translatedFormat('d F Y'),
             'hadirCount' => $data->where('status', 'Hadir')->count(),
+            'telatCount' => $data->where('status', 'Telat')->count(),
+            'sakitCount' => $data->where('status', 'Sakit')->count(),
+            'izinCount' => $data->where('status', 'Izin')->count(),
+            'bolosCount' => $data->where('status', 'Bolos')->count(),
             'alfaCount' => $data->where('status', 'Alfa')->count(),
         ];
 
@@ -254,6 +314,7 @@ class AttendanceController extends Controller
         $request->validate([
             'kelas_id' => 'required|exists:kelas,id',
             'nama_kelas' => 'required|string',
+            'nama_jurusan' => 'required|string',
             'pertemuan_title' => 'required|string',
         ]);
 
@@ -262,8 +323,9 @@ class AttendanceController extends Controller
         $fileName = "absensi-{$request->nama_kelas}-{$request->pertemuan_title}.xlsx";
         $reportInfo = [
             'namaKelas' => $request->nama_kelas,
+            'namaJurusan' => $request->nama_jurusan,
             'pertemuanTitle' => $pertemuan->title,
-            'tanggal' => Carbon::parse($pertemuan->created_at)->translatedFormat('d F Y')
+            'tanggal' => Carbon::parse($pertemuan->tanggal_pertemuan ?? $pertemuan->created_at)->translatedFormat('d F Y')
         ];
 
         return Excel::download(new AttendanceMeetExport($data, $reportInfo), $fileName);
@@ -282,13 +344,15 @@ class AttendanceController extends Controller
                 $pertemuanQuery->whereIn('id', $pertemuan_ids);
             }
 
+            $pertemuanQuery->where('kelas_id', $kelas_id);
+
            $pertemuanList = $pertemuanQuery->orderBy('created_at', 'asc')
             ->select(
                 'id',
                 'tahun_ajaran',
                 'gender',
                 'title',
-                DB::raw("DATE_FORMAT(created_at, '%d/%m/%Y') as tanggal")
+                DB::raw("DATE_FORMAT(COALESCE(tanggal_pertemuan, created_at), '%d/%m/%Y') as tanggal")
             )
             ->get();
 
@@ -321,7 +385,7 @@ class AttendanceController extends Controller
 
             $attendanceRecords = Attendance::whereIn('pertemuan_id', $pertemuanIds)
                 ->whereIn('siswa_id', $siswaIds)
-                ->get()
+                ->get(['siswa_id', 'pertemuan_id', 'status'])
                 ->keyBy(function ($item) {
                     return $item->siswa_id . '-' . $item->pertemuan_id;
                 });
@@ -336,7 +400,7 @@ class AttendanceController extends Controller
                     $record = $attendanceRecords->get($key);
 
                     if ($record) {
-                        $statusList[] = 'Hadir';
+                        $statusList[] = $record->status;
                     } else {
                         $statusList[] = 'Alfa';
                     }
@@ -521,15 +585,13 @@ class AttendanceController extends Controller
             $absentClassData = [];
             foreach ($classData as $gender => $genderData) {
                 $absentSiswaData = collect($genderData['siswa_data'])->filter(function ($siswa) {
-                    return in_array('Alfa', $siswa['status']); 
+                    return in_array('Alfa', $siswa['status']) || in_array('Bolos', $siswa['status']); 
                 });
 
-                if ($absentSiswaData->isNotEmpty()) {
-                    $absentClassData[$gender] = [
-                        'pertemuan_list' => $genderData['pertemuan_list'],
-                        'siswa_data'     => $absentSiswaData,
-                    ];
-                }
+                $absentClassData[$gender] = [
+                    'pertemuan_list' => $genderData['pertemuan_list'],
+                    'siswa_data' => $absentSiswaData,
+                ];
             }
             
             if (!empty($absentClassData)) {
@@ -570,16 +632,15 @@ class AttendanceController extends Controller
             foreach ($classData as $gender => $genderData) {
                 
                 $absentSiswaData = collect($genderData['siswa_data'])->filter(function ($siswa) {
-                    return in_array('Alfa', $siswa['status']); 
+                    return in_array('Alfa', $siswa['status']) || in_array('Bolos', $siswa['status']); 
                 });
 
-                if ($absentSiswaData->isNotEmpty()) {
-                    $absentClassData[$gender] = [
-                        'pertemuan_list' => $genderData['pertemuan_list'],
-                        'siswa_data'     => $absentSiswaData,
-                    ];
-                }
+                $absentClassData[$gender] = [
+                    'pertemuan_list' => $genderData['pertemuan_list'],
+                    'siswa_data' => $absentSiswaData,
+                ];
             }
+
             if (!empty($absentClassData)) {
                 $absentYearData[$kelasId] = $absentClassData;
             }

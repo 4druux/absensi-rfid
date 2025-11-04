@@ -29,11 +29,10 @@ const SelectMeet = ({
         isLoading,
         error,
         handleCreate,
+        handleBulkCreate,
         handleUpdate,
         handleDelete,
-        handleActivate,
-        handleDeactivate,
-    } = useSelectMeet(tahun_ajaran, gender);
+    } = useSelectMeet(tahun_ajaran, gender, kelas_id);
 
     const genderLabel = gender === "L" ? "Laki-laki " : "Perempuan";
     const pageTitle = `Pilih Pertemuan ${genderLabel}`;
@@ -95,15 +94,16 @@ const SelectMeet = ({
         setSelectedPertemuan(null);
     };
 
-    const handleSave = async (data, id) => {
+    const handleSave = async (data, id, scope) => {
         if (id) {
             await handleUpdate(id, data);
+        } else if (scope === "all_classes") {
+            await handleBulkCreate(data, closeModal);
         } else {
             await handleCreate(data, closeModal);
         }
         closeModal();
     };
-
     return (
         <PageContent
             pageTitle="Absensi Siswa"
@@ -147,17 +147,6 @@ const SelectMeet = ({
                             title={pertemuan.title}
                             subtitle="Lihat Laporan Absen"
                             isActive={pertemuan.is_active}
-                            onToggleActive={() =>
-                                pertemuan.is_active
-                                    ? handleDeactivate(
-                                          pertemuan.id,
-                                          pertemuan.title
-                                      )
-                                    : handleActivate(
-                                          pertemuan.id,
-                                          pertemuan.title
-                                      )
-                            }
                             onEdit={() => openEditModal(pertemuan)}
                             onDelete={() =>
                                 handleDelete(pertemuan.id, pertemuan.title)
@@ -196,6 +185,7 @@ const SelectMeet = ({
                 selectedPertemuan={selectedPertemuan}
                 tahun_ajaran={tahun_ajaran}
                 gender={gender}
+                kelas_id={kelas_id}
             />
         </PageContent>
     );

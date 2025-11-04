@@ -9,3 +9,4 @@ export * from "./siswa";
 export * from "./users";
 export * from "./attendance";
 export * from "./pertemuan";
+export * from "./titik-absen";

@@ -196,13 +196,30 @@
                                     <td class="text-center">{{ $siswa['rfid'] ?? '-' }}</td>
                                     @foreach ($siswa['status'] as $status)
                                         <td class="text-center">
-                                            @if ($status === 'Hadir')
-                                                ✓
-                                            @elseif ($status === 'Alfa')
-                                                A
-                                            @else
-                                                {{ $status }}
-                                            @endif
+                                            @switch($status)
+                                                @case('Hadir')
+                                                    ✓
+                                                @break
+
+                                                @case('Telat')
+                                                    T
+                                                @break
+
+                                                @case('Sakit')
+                                                    S
+                                                @break
+
+                                                @case('Izin')
+                                                    I
+                                                @break
+
+                                                @case('Bolos')
+                                                    B
+                                                @break
+
+                                                @default
+                                                    A
+                                            @endswitch
                                         </td>
                                     @endforeach
                                 </tr>
@@ -215,35 +232,51 @@
                 <div class="page-break"></div>
             @endif
 
-        @empty
-            <p style="text-align:center; font-weight:bold; margin-top: 50px;">Tidak ada data absensi yang ditemukan
-                untuk
-                tahun ajaran {{ $tahunAjaran }}.</p>
-        @endforelse
-    </div>
+            @empty
+                <p style="text-align:center; font-weight:bold; margin-top: 50px;">Tidak ada data absensi yang ditemukan
+                    untuk
+                    tahun ajaran {{ $tahunAjaran }}.</p>
+            @endforelse
+        </div>
 
-    <table class="legend-table">
-        <thead>
-            <tr>
-                <th>Status</th>
-                <th>Keterangan</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>✓</td>
-                <td>Hadir</td>
-            </tr>
-            <tr>
-                <td>A</td>
-                <td>Alfa</td>
-            </tr>
-        </tbody>
-    </table>
+        <table class="legend-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>✓</td>
+                    <td>Hadir</td>
+                </tr>
+                <tr>
+                    <td>T</td>
+                    <td>Telat</td>
+                </tr>
+                <tr>
+                    <td>S</td>
+                    <td>Sakit</td>
+                </tr>
+                <tr>
+                    <td>I</td>
+                    <td>Izin</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>Bolos</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Alfa</td>
+                </tr>
+            </tbody>
+        </table>
 
-    <div class="footer">
-        Laporan ini dibuat secara otomatis oleh Sistem Absensi SMK Yapia Parung
-    </div>
-</body>
+        <div class="footer">
+            Laporan ini dibuat secara otomatis oleh Sistem Absensi SMK Yapia Parung
+        </div>
+    </body>
 
-</html>
+    </html>

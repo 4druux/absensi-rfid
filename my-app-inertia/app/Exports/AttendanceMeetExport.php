@@ -79,12 +79,34 @@ class AttendanceMeetExport implements
             $jenisKelamin = $row['jenis_kelamin'] === 'L' ? 'Laki-laki' : 'Perempuan';
         }
 
+        $statusDisplay = 'A';
+        switch ($row['status']) {
+            case 'Hadir':
+                $statusDisplay = '✓';
+            break;
+            case 'Telat':
+                $statusDisplay = 'T';
+            break;
+            case 'Sakit':
+                $statusDisplay = 'S';
+            break;
+            case 'Izin':
+                $statusDisplay = 'I';
+            break;
+            case 'Bolos':
+                $statusDisplay = 'B';
+            break;
+            case 'Alfa':
+                $statusDisplay = 'A'; 
+            break;
+        }
+
         return [
             $this->mapIteration,
             $row['nama'],
             $jenisKelamin,
             $row['rfid'] ?? '-',
-            $row['status'] === 'Hadir' ? '✓' : ($row['status'] === 'Alfa' ? 'A' : $row['status']),
+            $statusDisplay,
             $row['tanggal_absen'] ?? '-',
             $row['waktu_absen'] ?? '-',
         ];
@@ -102,16 +124,17 @@ class AttendanceMeetExport implements
                 $sheet = $event->sheet->getDelegate();
 
                 $sheet->mergeCells('A1:' . $this->lastColumn . '1');
-                $sheet->setCellValue('A1', 'LAPORAN ABSENSI PER PERTEMUAN');
+                $sheet->setCellValue('A1', 'LAPORAN ABSENSI ' . ($this->reportInfo['pertemuanTitle'] ?? 'PERTEMUAN'));
 
                 $sheet->mergeCells('A2:' . $this->lastColumn . '2');
                 $sheet->setCellValue('A2', 'SMK YAPIA PARUNG');
 
                 $sheet->mergeCells('A3:' . $this->lastColumn . '3');
-                $sheet->setCellValue('A3', $this->reportInfo['namaKelas'] ?? 'N/A');
+                $kelasInfo = ($this->reportInfo['namaKelas'] ?? 'N/A') . ' - ' . ($this->reportInfo['namaJurusan'] ?? 'N/A');
+                $sheet->setCellValue('A3', $kelasInfo);
                 
                 $sheet->mergeCells('A4:' . $this->lastColumn . '4');
-                $sheet->setCellValue('A4', ($this->reportInfo['pertemuanTitle'] ?? 'N/A') . ' (' . ($this->reportInfo['tanggal'] ?? 'N/A') . ')');
+                $sheet->setCellValue('A4', 'Tanggal: ' . ($this->reportInfo['tanggal'] ?? 'N/A'));
 
                 $headerStyle = [
                     'font' => ['bold' => true, 'size' => 12],
@@ -151,7 +174,6 @@ class AttendanceMeetExport implements
             ],
         ]);
         
-        // Center align
         $sheet->getStyle('A6:A' . $this->totalRows)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('C6:G' . $this->totalRows)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
     }

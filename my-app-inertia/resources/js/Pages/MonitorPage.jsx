@@ -1,21 +1,39 @@
+import React from "react"; 
+import useSWR from "swr";
+import { fetcher } from "@/Utils/api";
 import AttendanceHeader from "@/Components/home/attendance-header";
 import StatusCard from "@/Components/home/status-card";
-import { useAttendance } from "@/Hooks/use-attendance";
 import DotLoader from "@/Components/ui/dot-loader";
 import { Volume2 } from "lucide-react";
 
-const MonitorPage = () => {
+const MonitorPage = ({ identifier }) => {
     const {
-        status: hookStatus,
-        attendanceCount,
-        isSessionActive,
-        isLoading,
+        data: monitorData,
         error,
-        isAudioReady,
-        initAudio,
-    } = useAttendance();
+        isLoading,
+    } = useSWR(identifier ? `/api/monitor-data/${identifier}` : null, fetcher, {
+        refreshInterval: 2000, 
+        onErrorRetry: (error, key, config, revalidate, { retryCount }) => {
+            if (error.response?.status === 404) return; 
+            setTimeout(() => revalidate({ retryCount }), 5000); 
+        },
+    });
 
-    if (isLoading && attendanceCount === 0) {
+    const [isAudioReady, setIsAudioReady] = React.useState(false);
+    const initAudio = () => {
+        setIsAudioReady(true);
+    };
+
+    const isSessionActive = monitorData?.isSessionActive || false;
+    const attendanceCount = monitorData?.attendanceCount || 0;
+    const attendanceRecords = monitorData?.attendanceRecords || [];
+    const hookStatus = monitorData?.status || {
+        type: "waiting",
+        title: "Menghubungkan...",
+        detail: "Memuat status sesi...",
+    };
+
+    if (isLoading && !monitorData && !error) {
         return (
             <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
                 <DotLoader />
@@ -27,10 +45,13 @@ const MonitorPage = () => {
         return (
             <div className="flex flex-col gap-4 justify-center items-center h-screen px-4">
                 <p className="text-lg text-red-600 font-medium text-center">
-                    Gagal memuat data absensi. Pastikan server API berjalan.
+                    Gagal terhubung ke Titik Absen.
                 </p>
                 <p className="text-sm text-gray-500 text-center">
-                    ({error.message})
+                    (
+                    {error.response?.data?.message ||
+                        "Pastikan identifier URL sudah benar."}
+                    )
                 </p>
             </div>
         );
@@ -52,7 +73,6 @@ const MonitorPage = () => {
 
     const handleEnterMonitor = () => {
         initAudio();
-
         const element = document.documentElement;
         if (element.requestFullscreen) {
             element.requestFullscreen();
@@ -75,11 +95,11 @@ const MonitorPage = () => {
                     <div className="flex flex-col items-center gap-4 text-white p-6 rounded-lg text-center">
                         <Volume2 className="w-16 h-16" />
                         <h2 className="text-2xl font-bold">
-                            Aktifkan Notifikasi Suara
+                            Masuk Mode Monitor
                         </h2>
                         <p className="text-lg">
-                            Klik di mana saja untuk mengaktifkan suara saat
-                            scan.
+                            Klik di mana saja untuk mengaktifkan suara dan masuk
+                            mode layar penuh.
                         </p>
                     </div>
                 </div>

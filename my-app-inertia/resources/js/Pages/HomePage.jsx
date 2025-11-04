@@ -70,7 +70,7 @@ const HomePage = () => {
             </div>
 
             <a
-                href={route("monitor")}
+                href={route("titik-absen.index")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="

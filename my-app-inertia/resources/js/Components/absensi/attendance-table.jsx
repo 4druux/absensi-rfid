@@ -1,8 +1,56 @@
 import React from "react";
-import { CheckCircle2, Loader2, XCircle } from "lucide-react";
-import Button from "@/Components/ui/button";
+import {
+    CheckCircle2,
+    XCircle,
+    Clock,
+    Ban,
+    Stethoscope,
+    CalendarCheck,
+} from "lucide-react";
+import ManualStatusDropdown from "./manual-status-dropdown";
 
-const AttendanceTable = ({ records, onToggle, isToggling }) => {
+const AttendanceTable = ({ records, onManualAttendance, isToggling }) => {
+    const getStatusDisplay = (status) => {
+        switch (status) {
+            case "Hadir":
+                return {
+                    label: "Hadir",
+                    className: "bg-emerald-50 text-emerald-600",
+                    icon: <CheckCircle2 className="h-3 w-3" />,
+                };
+            case "Telat":
+                return {
+                    label: "Telat",
+                    className: "bg-yellow-50 text-yellow-600",
+                    icon: <Clock className="h-3 w-3" />,
+                };
+            case "Sakit":
+                return {
+                    label: "Sakit",
+                    className: "bg-blue-50 text-blue-600",
+                    icon: <Stethoscope className="h-3 w-3" />,
+                };
+            case "Izin":
+                return {
+                    label: "Izin",
+                    className: "bg-red-50 text-red-600",
+                    icon: <CalendarCheck className="h-3 w-3" />,
+                };
+            case "Bolos":
+                return {
+                    label: "Bolos",
+                    className: "bg-pink-50 text-pink-600",
+                    icon: <Ban className="h-3 w-3" />,
+                };
+            default:
+                return {
+                    label: "Alfa",
+                    className: "bg-red-50 text-red-600",
+                    icon: <XCircle className="h-3 w-3" />,
+                };
+        }
+    };
+
     return (
         <div className="overflow-x-auto">
             <table className="w-full">
@@ -30,100 +78,56 @@ const AttendanceTable = ({ records, onToggle, isToggling }) => {
                             Waktu Absen
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                            Aksi
+                            Aksi Manual
                         </th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                    {records.map((record, index) => (
-                        <tr
-                            key={record.siswa_id}
-                            className="even:bg-slate-50 hover:bg-slate-100"
-                        >
-                            <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
-                                {index + 1}.
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
-                                {record.nama}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
-                                {record.rfid || "-"}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
-                                {record.jenis_kelamin === "L" ? "L" : "P"}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-4 text-sm">
-                                {record.status === "Hadir" ? (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-600">
-                                        <CheckCircle2 className="h-3 w-3" />
-                                        Hadir
-                                    </span>
-                                ) : (
-                                    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-600">
-                                        <XCircle className="h-3 w-3" />
-                                        Alfa
-                                    </span>
-                                )}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-500">
-                                {record.tanggal_absen
-                                    ? new Date(
-                                          record.tanggal_absen
-                                      ).toLocaleDateString("id-ID", {
-                                          day: "2-digit",
-                                          month: "short",
-                                          year: "numeric",
-                                      })
-                                    : "-"}
-                            </td>
-                            <td className="whitespace-nowrap px-4 py-4 text-sm font-mono text-gray-500">
-                                {record.waktu_absen || "-"}
-                            </td>
+                    {records.map((record, index) => {
+                        const statusDisplay = getStatusDisplay(record.status);
 
-                            <td className="whitespace-nowrap px-4 py-4 text-sm">
-                                {/* <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className={
-                                        record.status === "Hadir"
-                                            ? "text-red-600 border-red-500 hover:bg-red-50"
-                                            : "text-emerald-600 border-emerald-500 hover:bg-emerald-50"
-                                    }
-                                    onClick={() => onToggle(record.siswa_id)}
-                                    disabled={isToggling === record.siswa_id}
-                                >
-                                    {isToggling === record.siswa_id
-                                        ? "..."
-                                        : record.status === "Hadir"
-                                        ? "Batalkan"
-                                        : "Hadirkan"}
-                                </Button> */}
-
-                                {record.status !== "Hadir" && (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="text-emerald-600 border-emerald-500 hover:bg-emerald-50"
-                                        onClick={() =>
-                                            onToggle(record.siswa_id)
-                                        }
-                                        disabled={
-                                            isToggling === record.siswa_id
-                                        }
-                                        iconLeft={
-                                            isToggling === record.siswa_id ? (
-                                                <Loader2 className="animate-spin h-3.5 w-3.5" />
-                                            ) : null
-                                        }
+                        return (
+                            <tr
+                                key={record.siswa_id}
+                                className="even:bg-slate-50 hover:bg-slate-100"
+                            >
+                                <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
+                                    {index + 1}.
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
+                                    {record.nama}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
+                                    {record.rfid || "-"}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-4 text-sm font-medium text-gray-800">
+                                    {record.jenis_kelamin === "L" ? "L" : "P"}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-4 text-sm">
+                                    <span
+                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${statusDisplay.className}`}
                                     >
-                                        {isToggling === record.siswa_id
-                                            ? "Loading..."
-                                            : "Hadirkan"}
-                                    </Button>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
+                                        {statusDisplay.icon}
+                                        {statusDisplay.label}
+                                    </span>
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-500">
+                                    {record.tanggal_absen || "-"}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-4 text-sm font-mono text-gray-500">
+                                    {record.waktu_absen || "-"}
+                                </td>
+                                <td className="whitespace-nowrap px-4 py-4 text-sm">
+                                    <ManualStatusDropdown
+                                        siswaId={record.siswa_id}
+                                        currentStatus={record.status}
+                                        onManualAttendance={onManualAttendance}
+                                        isToggling={isToggling}
+                                    />
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
         </div>

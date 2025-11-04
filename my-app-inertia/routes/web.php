@@ -8,7 +8,11 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/login', 'Auth/LoginPage')->name('login')->middleware('guest');
 Route::inertia('/register', 'Auth/RegisterPage')->name('register')->middleware('guest');
 
-Route::inertia('/monitor', 'MonitorPage')->name('monitor')->middleware('prevent.caching');
+Route::get('/monitor/{identifier}', function ($identifier) {
+    return Inertia::render('MonitorPage', [
+        'identifier' => $identifier,
+    ]);
+})->name('monitor')->middleware('prevent.caching');
 
 Route::middleware(['auth', 'prevent.caching'])->group(function () {
     Route::inertia('/', 'HomePage')->name('home');
@@ -23,6 +27,8 @@ Route::middleware(['auth', 'prevent.caching'])->group(function () {
         Route::inertia('/', 'ManajemenAkun/SelectAccount')->name('index');
         Route::inertia('/show', 'ManajemenAkun/ShowAccount')->name('show');
     });
+
+    Route::inertia('/manajemen-titik-absen', 'ManajemenTitikAbsen/TitikAbsen')->name('titik-absen.index');
 
     Route::prefix('absensi-siswa')->name('absensi-siswa.')->group(function () {
         Route::inertia('/', 'Absensi/SelectYears')->name('years');    

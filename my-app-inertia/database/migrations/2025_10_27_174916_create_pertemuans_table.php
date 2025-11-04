@@ -13,10 +13,11 @@ return new class extends Migration
             $table->string('title');
             $table->string('tahun_ajaran');
             $table->enum('gender', ['L', 'P']);
-            $table->boolean('is_active')->default(false);
+            $table->foreignId('kelas_id')->constrained('kelas')->onDelete('cascade');
+            $table->date('tanggal_pertemuan')->nullable();
             $table->timestamps();
-            $table->index(['tahun_ajaran', 'gender']);
-            $table->index('is_active');
+            $table->index(['tahun_ajaran', 'gender', 'kelas_id']);
+            $table->index('tanggal_pertemuan');
         });
     }
 

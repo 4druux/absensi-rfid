@@ -80,7 +80,25 @@ class AttendanceClassSheet implements
         ];
 
         foreach ($row['status'] as $status) {
-            $rowData[] = $status === 'Hadir' ? '✓' : ($status === 'Alfa' ? 'A' : $status);
+            switch ($status) {
+                case 'Hadir':
+                    $rowData[] = '✓';
+                    break;
+                case 'Telat':
+                    $rowData[] = 'T';
+                    break;
+                case 'Sakit':
+                    $rowData[] = 'S';
+                    break;
+                case 'Izin':
+                    $rowData[] = 'I';
+                    break;
+                case 'Bolos':
+                    $rowData[] = 'B';
+                    break;
+                default:
+                    $rowData[] = 'A';
+            }
         }
 
         return $rowData;

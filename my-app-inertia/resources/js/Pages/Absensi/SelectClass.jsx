@@ -299,6 +299,7 @@ const SelectClass = ({ tahun_ajaran }) => {
                 onSubmit={handleModalSubmit}
                 tahunAjaran={modalState.tahunAjaran}
                 namaKelas={modalState.kelasInfo?.nama_kelas_lengkap}
+                kelasId={modalState.kelasInfo?.id}
             />
         </PageContent>
     );

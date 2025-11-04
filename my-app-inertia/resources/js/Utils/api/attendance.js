@@ -5,10 +5,15 @@ export const scanRfid = async (rfid) => {
     return response.data;
 };
 
-export const manualAttendanceToggle = async (siswa_id, pertemuan_id) => {
+export const manualAttendanceToggle = async (
+    siswa_id,
+    pertemuan_id,
+    status
+) => {
     const response = await axios.post("/api/attendance/manual", {
         siswa_id,
         pertemuan_id,
+        status,
     });
     return response.data;
 };

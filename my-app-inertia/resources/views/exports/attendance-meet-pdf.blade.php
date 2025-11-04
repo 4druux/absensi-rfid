@@ -113,19 +113,6 @@
             margin-bottom: 10px;
         }
 
-        .summary-table {
-            width: 30%;
-            border: none;
-            margin-top: 0px;
-            margin-bottom: 15px;
-        }
-
-        .summary-table td {
-            border: none;
-            padding: 2px;
-            white-space: nowrap;
-        }
-
         .legend-table {
             width: auto;
             margin-top: 0;
@@ -160,17 +147,6 @@
             </div>
         </div>
 
-        <table class="summary-table">
-            <tr>
-                <td>Total Hadir</td>
-                <td>: {{ $hadirCount }} Siswa</td>
-            </tr>
-            <tr>
-                <td>Total Alfa</td>
-                <td>: {{ $alfaCount }} Siswa</td>
-            </tr>
-        </table>
-
         <table>
             <thead>
                 <tr>
@@ -199,50 +175,83 @@
 
                         <td class="text-center">{{ $record['rfid'] ?? '-' }}</td>
                         <td class="text-center">
-                            @if ($record['status'] === 'Hadir')
-                                ✓
-                            @elseif ($record['status'] === 'Alfa')
-                                A
-                            @else
-                                {{ $record['status'] }}
-                            @endif
+                            @switch($record['status'])
+                                @case('Hadir')
+                                    ✓
+                                @break
+
+                                @case('Telat')
+                                    T
+                                @break
+
+                                @case('Sakit')
+                                    S
+                                @break
+
+                                @case('Izin')
+                                    I
+                                @break
+
+                                @case('Bolos')
+                                    B
+                                @break
+
+                                @default
+                                    A
+                            @endswitch
                         </td>
                         <td class="text-center">{{ $record['tanggal_absen'] ?? '-' }}</td>
                         <td class="text-center">{{ $record['waktu_absen'] ?? '-' }}</td>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center">
-                            Tidak ada data absensi.
-                        </td>
-                    </tr>
-                @endforelse
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                Tidak ada data absensi.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <table class="legend-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>✓</td>
+                    <td>Hadir</td>
+                </tr>
+                <tr>
+                    <td>T</td>
+                    <td>Telat</td>
+                </tr>
+                <tr>
+                    <td>S</td>
+                    <td>Sakit</td>
+                </tr>
+                <tr>
+                    <td>I</td>
+                    <td>Izin</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>Bolos</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Alfa</td>
+                </tr>
             </tbody>
         </table>
-    </div>
 
-    <table class="legend-table">
-        <thead>
-            <tr>
-                <th>Status</th>
-                <th>Keterangan</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>✓</td>
-                <td>Hadir</td>
-            </tr>
-            <tr>
-                <td>A</td>
-                <td>Alfa</td>
-            </tr>
-        </tbody>
-    </table>
+        <div class="footer">
+            Laporan ini dibuat secara otomatis oleh Sistem Absensi SMK Yapia Parung
+        </div>
+    </body>
 
-    <div class="footer">
-        Laporan ini dibuat secara otomatis oleh Sistem Absensi SMK Yapia Parung
-    </div>
-</body>
-
-</html>
+    </html>

@@ -10,7 +10,9 @@ const HeaderContent = ({ Icon, title, description, details = [] }) => {
             )}
 
             <div>
-                <h3 className="text-md md:text-lg font-medium text-gray-700">{title}</h3>
+                <h3 className="text-md md:text-lg font-medium text-gray-700">
+                    {title}
+                </h3>
 
                 {description && (
                     <p className="text-xs md:text-sm text-gray-500">

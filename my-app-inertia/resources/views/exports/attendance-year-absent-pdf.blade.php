@@ -140,26 +140,12 @@
             @endif
 
             <div class="header-text">
-                <h1>LAPORAN REKAPITULASI (HANYA TIDAK HADIR)</h1>
+                <h1>LAPORAN ABSENSI TIDAK HADIR</h1>
                 <h2>SMK YAPIA PARUNG</h2>
                 <h2>Tahun Ajaran: {{ $tahunAjaran }}</h2>
             </div>
         </div>
 
-        <table class="legend-table">
-            <thead>
-                <tr>
-                    <th>Status</th>
-                    <th>Keterangan</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>A</td>
-                    <td>Alfa</td>
-                </tr>
-            </tbody>
-        </table>
 
         @forelse ($yearData as $kelasId => $classData)
             @php
@@ -187,8 +173,7 @@
                 @if ($pertemuanList->isEmpty() || $siswaData->isEmpty())
                     <p style="text-align:center; font-style:italic;">Tidak ada data siswa yang tidak hadir untuk
                         {{ $genderLabel }}
-                        di
-                        kelas ini.</p>
+                        di kelas ini.</p>
                 @else
                     <table>
                         <thead>
@@ -213,9 +198,30 @@
                                     <td class="text-center">{{ $siswa['rfid'] ?? '-' }}</td>
                                     @foreach ($siswa['status'] as $status)
                                         <td class="text-center">
-                                            @if ($status === 'Alfa')
-                                                A
-                                            @endif
+                                            @switch($status)
+                                                @case('Hadir')
+                                                    ✓
+                                                @break
+
+                                                @case('Telat')
+                                                    T
+                                                @break
+
+                                                @case('Sakit')
+                                                    S
+                                                @break
+
+                                                @case('Izin')
+                                                    I
+                                                @break
+
+                                                @case('Bolos')
+                                                    B
+                                                @break
+
+                                                @default
+                                                    A
+                                            @endswitch
                                         </td>
                                     @endforeach
                                 </tr>
@@ -228,18 +234,54 @@
                 <div class="page-break"></div>
             @endif
 
-        @empty
-            <p style="text-align:center; font-weight:bold; margin-top: 50px;">Tidak ada data siswa yang tidak hadir
-                ditemukan
-                untuk
-                tahun ajaran {{ $tahunAjaran }}.</p>
-        @endforelse
+            @empty
+                <p style="text-align:center; font-weight:bold; margin-top: 50px;">Tidak ada data siswa yang tidak hadir
+                    ditemukan
+                    untuk
+                    tahun ajaran {{ $tahunAjaran }}.</p>
+            @endforelse
 
-    </div>
+        </div>
 
-    <div class="footer">
-        Laporan ini dibuat secara otomatis oleh Sistem Absensi SMK Yapia Parung
-    </div>
-</body>
 
-</html>
+        <table class="legend-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>✓</td>
+                    <td>Hadir</td>
+                </tr>
+                <tr>
+                    <td>T</td>
+                    <td>Telat</td>
+                </tr>
+                <tr>
+                    <td>S</td>
+                    <td>Sakit</td>
+                </tr>
+                <tr>
+                    <td>I</td>
+                    <td>Izin</td>
+                </tr>
+                <tr>
+                    <td>B</td>
+                    <td>Bolos</td>
+                </tr>
+                <tr>
+                    <td>A</td>
+                    <td>Alfa</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer">
+            Laporan ini dibuat secara otomatis oleh Sistem Absensi SMK Yapia Parung
+        </div>
+    </body>
+
+    </html>
