@@ -74,18 +74,20 @@ const MonitorPage = ({ identifier }) => {
             }
         };
 
-        window.Echo.channel("attendance-channel").listen(
+        const monitorChannelName = `monitor-channel.${identifier}`;
+
+        window.Echo.channel(monitorChannelName).listen(
             "AttendanceScanned",
             handleScan
         );
 
         return () => {
-            window.Echo.channel("attendance-channel").stopListening(
+            window.Echo.channel(monitorChannelName).stopListening(
                 "AttendanceScanned"
             );
             clearTimeout(statusTimerRef.current);
         };
-    }, [mutate, isAudioReady]);
+    }, [mutate, isAudioReady, identifier]);
 
     if (isLoading && !monitorData && !error) {
         return (

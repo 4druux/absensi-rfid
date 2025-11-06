@@ -18,8 +18,9 @@ class TitikAbsenController extends Controller
     public function index()
     {
         $titikAbsens = TitikAbsen::with('pertemuanAktif.kelas') 
-            ->orderBy('nama_titik')
+            ->orderByRaw('LENGTH(nama_titik), nama_titik') 
             ->get();
+            
         return response()->json($titikAbsens);
     }
 

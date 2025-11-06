@@ -6,6 +6,7 @@ import {
     UserCog,
     ClipboardCheck,
     RadioTower,
+    Download,
 } from "lucide-react";
 import { Link } from "@inertiajs/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,6 +31,10 @@ const Sidebar = ({ isOpen }) => {
 
         if (href === "/beranda") {
             return pathname === "/beranda" || pathname.startsWith("/beranda/");
+        }
+
+        if (href.startsWith("/downloads/")) {
+            return false;
         }
 
         return pathname === href || pathname.startsWith(href + "/");
@@ -75,6 +80,15 @@ const Sidebar = ({ isOpen }) => {
             description: "Absensi siswa",
             href: "/absensi-siswa",
             canView: auth.user && hasAccess("superadmin", "admin"),
+        },
+        {
+            id: "aplikasi-rfid-reader",
+            label: "Aplikasi RFID Reader",
+            icon: Download,
+            description: "Download RFID Reader",
+            href: "/downloads/Reader.exe",
+            canView: auth.user && hasAccess("superadmin", "admin"),
+            isExternal: true,
         },
     ];
 
@@ -290,47 +304,65 @@ const Sidebar = ({ isOpen }) => {
                                     }
 
                                     const isActive = getIsActive(item.href);
+                                    const linkContent = (
+                                        <>
+                                            <Icon
+                                                className={`w-7 h-7 ${
+                                                    isActive
+                                                        ? "text-indigo-600"
+                                                        : "text-gray-600"
+                                                }`}
+                                            />
+                                            <div className="flex-1">
+                                                <div
+                                                    className={`font-medium text-sm ${
+                                                        isActive
+                                                            ? "text-indigo-600"
+                                                            : ""
+                                                    }`}
+                                                >
+                                                    {item.label}
+                                                </div>
+                                                <div
+                                                    className={`text-xs ${
+                                                        isActive
+                                                            ? "text-indigo-600"
+                                                            : "text-gray-500 group-hover:text-gray-800"
+                                                    }`}
+                                                >
+                                                    {item.description}
+                                                </div>
+                                            </div>
+                                        </>
+                                    );
+
+                                    const linkClasses = `w-full flex items-center space-x-2 p-3 rounded-r-full border-r border-y transition-all duration-200 text-left cursor-pointer group ${
+                                        isActive
+                                            ? "bg-indigo-100 border-indigo-500"
+                                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-800 border-transparent"
+                                    }`;
+
                                     return (
                                         <motion.li
                                             key={item.id}
                                             variants={itemVariants}
                                         >
-                                            <Link
-                                                href={item.href}
-                                                className={`w-full flex items-center space-x-2 p-3 rounded-r-full border-r border-y transition-all duration-200 text-left cursor-pointer group ${
-                                                    isActive
-                                                        ? "bg-indigo-100 border-indigo-500"
-                                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-800 border-transparent"
-                                                }`}
-                                            >
-                                                <Icon
-                                                    className={`w-7 h-7 ${
-                                                        isActive
-                                                            ? "text-indigo-600"
-                                                            : "text-gray-600"
-                                                    }`}
-                                                />
-                                                <div className="flex-1">
-                                                    <div
-                                                        className={`font-medium text-sm ${
-                                                            isActive
-                                                                ? "text-indigo-600"
-                                                                : ""
-                                                        }`}
-                                                    >
-                                                        {item.label}
-                                                    </div>
-                                                    <div
-                                                        className={`text-xs ${
-                                                            isActive
-                                                                ? "text-indigo-600"
-                                                                : "text-gray-500 group-hover:text-gray-800"
-                                                        }`}
-                                                    >
-                                                        {item.description}
-                                                    </div>
-                                                </div>
-                                            </Link>
+                                            {item.isExternal ? (
+                                                <a
+                                                    href={item.href}
+                                                    download
+                                                    className={linkClasses}
+                                                >
+                                                    {linkContent}
+                                                </a>
+                                            ) : (
+                                                <Link
+                                                    href={item.href}
+                                                    className={linkClasses}
+                                                >
+                                                    {linkContent}
+                                                </Link>
+                                            )}
                                         </motion.li>
                                     );
                                 })}

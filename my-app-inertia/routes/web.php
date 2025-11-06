@@ -107,6 +107,16 @@ Route::middleware(['auth', 'prevent.caching'])->group(function () {
         AttendanceController::class,
         'exportYearReportAbsentExcel',
     ])->name('attendance.export.year.absent.excel');
+    
+    Route::get('/export/session/absent/pdf', [
+        AttendanceController::class, 
+        'exportSessionAbsentPdf'
+    ])->name('attendance.session.export.absent.pdf');
+
+    Route::get('/export/session/absent/excel', [
+        AttendanceController::class, 
+        'exportSessionAbsentExcel'
+    ])->name('attendance.session.export.absent.excel');
 
     Route::inertia('/pengaturan-akun', 'Auth/AccountSettingsPage')->name('account.settings');
 });
